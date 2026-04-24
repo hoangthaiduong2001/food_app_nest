@@ -5,7 +5,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -34,10 +33,10 @@ model Language {
 
 model User {
   id                          Int                    @id @default(autoincrement())
-  email                       String                 @db.VarChar(255)
+  email                       String                 @unique @db.VarChar(255)
   name                        String                 @db.VarChar(500)
   password                    String                 @db.VarChar(500)
-  phoneNumber                 String                 @db.VarChar(50)
+  phoneNumber                 String                 @unique @db.VarChar(50)
   avatar                      String?                @db.VarChar(1000)
 
   totpSecret                  String?                @unique @db.VarChar(1000)
@@ -160,7 +159,7 @@ model Permission {
 
 model Role {
   id                          Int                    @id @default(autoincrement())
-  name                        String                 @db.VarChar(500)
+  name                        String                 @unique @db.VarChar(500)
   description                 String                 @default("")
   isActive                    Boolean                @default(true)
   permissions                 Permission[]
@@ -183,16 +182,19 @@ model Product {
   name                        String                 @db.VarChar(500)
   basePrice                   Float
   virtualPrice                Float
+  stock                       Int                    @default(0)
+  isActive                    Boolean                @default(true)
+  slug                        String?                @unique @db.VarChar(600)
   brandId                     Int
   brand                       Brand                  @relation(fields: [brandId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   images                      String[]
   categories                  Category[]
-  /// [Variants]
-  variants                    Json
+  variants                    ProductVariant[]
   reviews                     Review[]
   productTranslations         ProductTranslation[]
   publishedAt                 DateTime?
-  orders                      Order[]
+  orderItems                  OrderItem[]
+  cartItems                   CartItem[]
 
   createdById                 Int
   createdBy                   User                   @relation("ProductCreatedBy", fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -204,6 +206,31 @@ model Product {
   updatedAt                   DateTime               @updatedAt
 
   @@index([deletedAt])
+  @@index([isActive, deletedAt])
+  @@index([brandId, deletedAt])
+}
+
+model ProductVariant {
+  id                          Int                    @id @default(autoincrement())
+  productId                   Int
+  product                     Product                @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sku                         String                 @unique @db.VarChar(120)
+  name                        String?                @db.VarChar(300)
+  price                       Float
+  stock                       Int                    @default(0)
+  attributes                  Json?
+  isDefault                   Boolean                @default(false)
+  isActive                    Boolean                @default(true)
+
+  cartItems                   CartItem[]
+  orderItems                  OrderItem[]
+
+  deletedAt                   DateTime?
+  createdAt                   DateTime               @default(now())
+  updatedAt                   DateTime               @updatedAt
+
+  @@index([productId, deletedAt])
+  @@index([isActive, deletedAt])
 }
 
 model ProductTranslation {
@@ -314,15 +341,22 @@ model BrandTranslation {
 
 model CartItem {
   id                          Int                    @id @default(autoincrement())
+  productId                   Int
+  product                     Product                @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  variantId                   Int?
+  variant                     ProductVariant?        @relation(fields: [variantId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   quantity                    Int
+  isSelected                  Boolean                @default(true)
   userId                      Int
   user                        User                   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   createdAt                   DateTime               @default(now())
   updatedAt                   DateTime               @updatedAt
 
-  @@unique([userId])
+  @@unique([userId, productId, variantId])
   @@index([userId])
+  @@index([productId])
+  @@index([variantId])
 }
 
 
@@ -331,14 +365,20 @@ model Order {
   userId                      Int
   user                        User                   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   status                      OrderStatus
-  products                    Product[]
+  paymentStatus               PaymentStatus          @default(PENDING)
+  paymentMethod               PaymentMethod
+  shippingFee                 Int                    @default(0)
+  discountAmount              Int                    @default(0)
+  totalAmount                 Int                    @default(0)
+  finalAmount                 Int                    @default(0)
+  paidAt                      DateTime?
+  items                       OrderItem[]
   reviews                     Review[]
+  paymentTransactions         PaymentTransaction[]
   /// [Receiver]
   receiver                    Json
   shopId                      Int?
   shop                        User?                  @relation("Shop", fields: [shopId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  paymentId                   Int
-  payment                     Payment                @relation(fields: [paymentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   createdById                 Int?
   createdBy                   User?                  @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: NoAction)
@@ -351,14 +391,31 @@ model Order {
 
   @@index([deletedAt])
   @@index([status, deletedAt])
+  @@index([userId, status, createdAt])
 }
 
-model Payment {
+model OrderItem {
   id                          Int                    @id @default(autoincrement())
-  orders                      Order[]
-  status                      PaymentStatus
+  orderId                     Int
+  order                       Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  productId                   Int
+  product                     Product                @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  variantId                   Int?
+  variant                     ProductVariant?        @relation(fields: [variantId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  quantity                    Int
+  unitPrice                   Int
+  totalPrice                  Int
+  productName                 String                 @db.VarChar(500)
+  productImage                String?                @db.VarChar(1000)
+  attributes                  Json?
+
   createdAt                   DateTime               @default(now())
   updatedAt                   DateTime               @updatedAt
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([variantId])
+  @@index([orderId, productId])
 }
 
 model Review {
@@ -394,7 +451,10 @@ model ReviewMedia {
 
 model PaymentTransaction {
   id                          Int                    @id @default(autoincrement())
-  getaway                     String                 @db.VarChar(100)
+  orderId                     Int?
+  order                       Order?                 @relation(fields: [orderId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  gateway                     String                 @db.VarChar(100)
+  status                      PaymentStatus          @default(PENDING)
   transactionDate             DateTime               @default(now())
   accountNumber               String?                @db.VarChar(100)
   subAccount                  String?                @db.VarChar(250)
@@ -407,6 +467,9 @@ model PaymentTransaction {
   body                        String?                @db.Text
 
   createdAt                   DateTime               @default(now())
+
+  @@index([orderId])
+  @@index([status, transactionDate])
 }
 
 model Message {
@@ -470,6 +533,15 @@ enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+  E_WALLET
+  CREDIT_CARD
 }
 
 enum MediaType {

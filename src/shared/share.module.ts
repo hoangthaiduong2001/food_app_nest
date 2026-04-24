@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { HashingService } from './services/hasing.service';
+import { HashingService } from './services/hashing.service';
 import { PrismaService } from './services/prisma.service';
 import { TokenService } from './services/token.service';
 

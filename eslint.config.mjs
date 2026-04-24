@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ['eslint.config.mjs', 'prisma/seed.js'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -19,8 +19,19 @@ export default tseslint.config(
       },
       sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['prisma/seed.js'],
+        },
         tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ['prisma/seed.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      parserOptions: {
+        projectService: false,
       },
     },
   },
@@ -34,6 +45,9 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      'no-useless-catch': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
     },
   },
 );
