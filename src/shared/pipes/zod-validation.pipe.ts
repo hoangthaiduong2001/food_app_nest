@@ -3,7 +3,11 @@ import { createZodValidationPipe } from 'nestjs-zod';
 import { ZodError } from 'zod';
 
 const ZodValidationPipeClass = createZodValidationPipe({
-  strictSchemaDeclaration: true,
+  // strictSchemaDeclaration: true ép MỌI param phải có Zod DTO, kể cả param từ
+  // custom decorator (vd @CurrentUser()). Tắt để param không-Zod pass thẳng;
+  // các route có @Body()/@Query() với Zod DTO vẫn validate đầy đủ vì pipe
+  // tự nhận diện class kế thừa createZodDto.
+  strictSchemaDeclaration: false,
   createValidationException: (error) => {
     if (error instanceof ZodError) {
       const firstIssue = error.issues[0];

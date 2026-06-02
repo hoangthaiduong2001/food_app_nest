@@ -38,7 +38,7 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
       'prettier/prettier': ['off', { endOfLine: 'auto' }],
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -48,6 +48,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       'no-useless-catch': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/await-thenable': 'off',
     },
   },
 );

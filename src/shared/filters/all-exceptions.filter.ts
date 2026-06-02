@@ -19,34 +19,35 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    let message = 'Internal server error';
-    let errorData: unknown = null;
+    let errorData: Record<string, unknown> = {
+      message: 'Internal server error',
+    };
 
     if (exception instanceof HttpException) {
       const errorResponse = exception.getResponse();
 
       if (typeof errorResponse === 'string') {
-        message = errorResponse;
-        errorData = { detail: errorResponse };
+        errorData = { message: errorResponse };
       } else {
-        const errorObject = errorResponse as Record<string, unknown>;
+        const raw = errorResponse as Record<string, unknown>;
+        const rawMessage = raw.message;
 
-        if (typeof errorObject.message === 'string') {
-          message = errorObject.message;
-        } else if (Array.isArray(errorObject.message)) {
-          message = 'Validation error';
-        }
-
-        errorData = errorObject;
+        errorData = {
+          ...raw,
+          message:
+            typeof rawMessage === 'string'
+              ? rawMessage
+              : Array.isArray(rawMessage)
+                ? 'Validation error'
+                : 'Error',
+        };
       }
     } else if (exception instanceof Error) {
-      message = exception.message;
-      errorData = { detail: exception.message };
+      errorData = { message: exception.message };
     }
 
-    const payload: ApiErrorResponse<unknown> = {
+    const payload: ApiErrorResponse<Record<string, unknown>> = {
       type: 'error',
-      message,
       error: errorData,
       statusCode,
     };

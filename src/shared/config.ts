@@ -18,6 +18,15 @@ const configSchema = z.object({
   ACCESS_TOKEN_EXPIRES_IN: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_EXPIRES_IN: z.string(),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+    .default('info'),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
+  // Comma-separated list, vd "http://localhost:3000,https://app.example.com"
+  CORS_ORIGINS: z.string().default('http://localhost:3000'),
   //   PAYMENT_API_KEY: z.string(),
   //   ADMIN_NAME: z.string(),
   //   ADMIN_EMAIL: z.string(),

@@ -7,7 +7,6 @@ export interface ApiSuccessResponse<Data = unknown> {
 
 export interface ApiErrorResponse<ErrorData = unknown> {
   type: 'error';
-  message: string;
   error: ErrorData;
   statusCode: number;
 }

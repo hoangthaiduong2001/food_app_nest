@@ -1,7 +1,8 @@
 export interface AccessTokenPayloadCreate {
-  userId: string;
-  deviceId: string;
+  userId: number;
+  deviceId: number;
   roleId: number;
+  roleName: string;
 }
 
 export interface VerifyAccessTokenPayload extends AccessTokenPayloadCreate {
