@@ -8,6 +8,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -29,7 +30,10 @@ import {
   ListApiKeyResDto,
   LoginBodyDto,
   LoginResDto,
+  LogoutResDto,
   MeResDto,
+  RefreshTokenBodyDto,
+  RefreshTokenResDto,
   RegisterBodyDto,
   RegisterResDto,
   RevokeApiKeyResDto,
@@ -86,6 +90,57 @@ export class AuthController {
       user: req.user,
       userAgent: req.headers['user-agent'] ?? 'unknown',
       ip: ip ?? 'unknown',
+    });
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh tokens (rotate). Old refresh token is invalidated.',
+  })
+  @ApiSuccess(RefreshTokenResDto, { description: 'Tokens refreshed' })
+  @ApiError(400, 'Validation error', 'refreshToken required')
+  @ApiError(
+    401,
+    'Invalid or revoked refresh token',
+    'Refresh token has been revoked',
+  )
+  @ApiError(403, 'Account not active', 'Account is not active')
+  @SuccessMessage('Tokens refreshed')
+  @ZodSerializerDto(RefreshTokenResDto)
+  refresh(@Body() body: RefreshTokenBodyDto) {
+    return this.authService.refreshToken(body.refreshToken);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Logout current device — revoke refresh + blacklist access token',
+  })
+  @ApiSuccess(LogoutResDto, { description: 'Logged out' })
+  @ApiError(401, 'Missing or invalid token', 'Unauthorized')
+  @SuccessMessage('Logged out')
+  @ZodSerializerDto(LogoutResDto)
+  logout(@CurrentUser() user: ActiveUserData) {
+    if (
+      user.source !== 'jwt' ||
+      user.deviceId === undefined ||
+      !user.accessTokenJti ||
+      !user.accessTokenExp
+    ) {
+      throw new ForbiddenException({
+        message: 'Logout just support JWT access token',
+      });
+    }
+
+    return this.authService.logout({
+      userId: user.userId,
+      deviceId: user.deviceId,
+      accessTokenJti: user.accessTokenJti,
+      accessTokenExp: user.accessTokenExp,
     });
   }
 

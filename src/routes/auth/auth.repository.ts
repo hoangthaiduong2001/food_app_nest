@@ -111,4 +111,63 @@ export class AuthRepository {
       update: { token, expiresAt },
     });
   }
+
+  findRefreshToken(token: string) {
+    return this.prismaService.refreshToken.findUnique({
+      where: { token },
+      select: {
+        token: true,
+        userId: true,
+        deviceId: true,
+        expiresAt: true,
+        user: {
+          select: {
+            id: true,
+            status: true,
+            roleId: true,
+            role: { select: { name: true } },
+          },
+        },
+      },
+    });
+  }
+
+  // Xóa refresh token theo (userId, deviceId) — dùng cho logout
+  deleteRefreshTokenByDevice(userId: number, deviceId: number) {
+    return this.prismaService.refreshToken.deleteMany({
+      where: { userId, deviceId },
+    });
+  }
+
+  // Xóa theo token cụ thể — dùng cho rotation (xóa token cũ vừa được dùng)
+  deleteRefreshTokenByToken(token: string) {
+    return this.prismaService.refreshToken.deleteMany({
+      where: { token },
+    });
+  }
+
+  revokeAccessToken({
+    jti,
+    userId,
+    expiresAt,
+    reason,
+  }: {
+    jti: string;
+    userId: number;
+    expiresAt: Date;
+    reason: string;
+  }) {
+    return this.prismaService.revokedAccessToken.upsert({
+      where: { jti },
+      create: { jti, userId, expiresAt, reason },
+      update: {},
+    });
+  }
+
+  isAccessTokenRevoked(jti: string) {
+    return this.prismaService.revokedAccessToken.findUnique({
+      where: { jti },
+      select: { jti: true },
+    });
+  }
 }

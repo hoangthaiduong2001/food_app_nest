@@ -25,7 +25,6 @@ const configSchema = z.object({
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
-  // Comma-separated list, vd "http://localhost:3000,https://app.example.com"
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
   //   PAYMENT_API_KEY: z.string(),
   //   ADMIN_NAME: z.string(),

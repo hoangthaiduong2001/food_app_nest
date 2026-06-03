@@ -5,7 +5,10 @@ import {
   ListApiKeyResSchema,
   LoginBodySchema,
   LoginResSchema,
+  LogoutResSchema,
   MeResSchema,
+  RefreshTokenBodySchema,
+  RefreshTokenResSchema,
   RegisterBodySchema,
   RegisterResSchema,
   RevokeApiKeyResSchema,
@@ -28,3 +31,9 @@ export class CreateApiKeyResDto extends createZodDto(CreateApiKeyResSchema) {}
 export class ListApiKeyResDto extends createZodDto(ListApiKeyResSchema) {}
 
 export class RevokeApiKeyResDto extends createZodDto(RevokeApiKeyResSchema) {}
+
+export class RefreshTokenBodyDto extends createZodDto(RefreshTokenBodySchema) {}
+
+export class RefreshTokenResDto extends createZodDto(RefreshTokenResSchema) {}
+
+export class LogoutResDto extends createZodDto(LogoutResSchema) {}

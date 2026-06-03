@@ -5,7 +5,9 @@ export interface AccessTokenPayloadCreate {
   roleName: string;
 }
 
+// jti = JWT ID — dùng để blacklist token đã revoke
 export interface VerifyAccessTokenPayload extends AccessTokenPayloadCreate {
+  jti: string;
   exp: number;
   iat: number;
 }
@@ -15,6 +17,7 @@ export interface RefreshTokenPayloadCreate {
 }
 
 export interface VerifyRefreshTokenPayload extends RefreshTokenPayloadCreate {
+  jti: string;
   exp: number;
   iat: number;
 }

@@ -2,17 +2,21 @@ import envConfig from '@/shared/config';
 import { UserStatus } from '@/shared/constants/auth.constant';
 import { ShareRoleRepository } from '@/shared/repositories/share-role.repo';
 import { HashingService } from '@/shared/services/hashing.service';
+import { TokenBlacklistService } from '@/shared/services/token-blacklist.service';
 import { TokenService } from '@/shared/services/token.service';
 import { handlePrismaError } from '@/shared/utils/prisma-error.util';
 import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import ms, { StringValue } from 'ms';
 import {
   LoginResType,
+  LogoutResType,
   MeResType,
+  RefreshTokenResType,
   RegisterBodyType,
   RegisterResType,
 } from './auth.model';
@@ -31,6 +35,7 @@ export class AuthService {
     private readonly hashingService: HashingService,
     private readonly tokenService: TokenService,
     private readonly shareRoleRepository: ShareRoleRepository,
+    private readonly tokenBlacklist: TokenBlacklistService,
   ) {}
 
   async validateUser(
@@ -139,6 +144,74 @@ export class AuthService {
       roleId: user.roleId,
       roleName: user.roleName,
     });
+  }
+
+  /**
+   * Rotation flow:
+   *  1. Verify refresh token + check còn trong DB (chưa bị xoá)
+   *  2. Xoá refresh token cũ (1 lần dùng duy nhất)
+   *  3. Cấp cặp token mới
+   * Nếu attacker tái dùng refresh token đã rotate → bước 1 fail → 401 → user/device phải re-login.
+   */
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResType> {
+    // Verify signature + expiry; payload không cần dùng vì ta load lại từ DB
+    try {
+      await this.tokenService.verifyRefreshToken(refreshToken);
+    } catch {
+      throw new UnauthorizedException({
+        message: 'Invalid or expired refresh token',
+      });
+    }
+
+    const stored = await this.authRepository.findRefreshToken(refreshToken);
+    if (!stored) {
+      // Token hợp lệ về signature nhưng không còn trong DB → có thể đã bị rotate hoặc logout
+      throw new UnauthorizedException({
+        message: 'Refresh token has been revoked',
+      });
+    }
+
+    if (stored.user.status !== UserStatus.ACTIVE) {
+      throw new ForbiddenException({ message: 'Account is not active' });
+    }
+
+    // Xoá refresh token cũ — rotation
+    await this.authRepository.deleteRefreshTokenByToken(refreshToken);
+
+    return this.generateTokens({
+      userId: stored.userId,
+      deviceId: stored.deviceId,
+      roleId: stored.user.roleId,
+      roleName: stored.user.role.name,
+    });
+  }
+
+  /**
+   * Logout cho device hiện tại:
+   *  - Xoá refresh token của (userId, deviceId)
+   *  - Blacklist access token đang dùng theo jti tới khi nó tự expire
+   */
+  async logout({
+    userId,
+    deviceId,
+    accessTokenJti,
+    accessTokenExp,
+  }: {
+    userId: number;
+    deviceId: number;
+    accessTokenJti: string;
+    accessTokenExp: number;
+  }): Promise<LogoutResType> {
+    await this.authRepository.deleteRefreshTokenByDevice(userId, deviceId);
+
+    await this.tokenBlacklist.revoke({
+      jti: accessTokenJti,
+      userId,
+      expiresAt: new Date(accessTokenExp * 1000),
+      reason: 'logout',
+    });
+
+    return { loggedOut: true };
   }
 
   private async generateTokens({

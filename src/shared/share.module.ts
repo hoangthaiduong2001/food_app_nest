@@ -9,6 +9,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { HashingService } from './services/hashing.service';
 import { PrismaService } from './services/prisma.service';
 import { RedisService } from './services/redis.service';
+import { TokenBlacklistService } from './services/token-blacklist.service';
 import { TokenService } from './services/token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
@@ -30,11 +31,18 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     HashingService,
     TokenService,
     RedisService,
+    TokenBlacklistService,
     JwtStrategy,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtOrApiKeyGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
-  exports: [PrismaService, HashingService, TokenService, RedisService],
+  exports: [
+    PrismaService,
+    HashingService,
+    TokenService,
+    RedisService,
+    TokenBlacklistService,
+  ],
 })
 export class ShareModule {}

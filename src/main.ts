@@ -13,10 +13,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
 
-  // Security headers — set sớm để áp dụng cho mọi response, kể cả error
   app.use(helmet());
 
-  // CORS allowlist từ env. credentials=true cho phép Authorization header + cookies
   const corsOrigins = envConfig.CORS_ORIGINS.split(',')
     .map((o) => o.trim())
     .filter(Boolean);

@@ -162,6 +162,18 @@ model ApiKey {
   @@index([expiresAt])
 }
 
+// Blacklist access token đã bị revoke (logout, refresh rotation).
+// Lookup theo jti khi verify token; expiresAt = exp của JWT để cron cleanup.
+model RevokedAccessToken {
+  jti                         String                 @id @db.VarChar(36)
+  userId                      Int
+  expiresAt                   DateTime
+  reason                      String                 @db.VarChar(50)
+  createdAt                   DateTime               @default(now())
+
+  @@index([expiresAt])
+  @@index([userId])
+}
 
 model Permission {
   id                          Int                    @id @default(autoincrement())

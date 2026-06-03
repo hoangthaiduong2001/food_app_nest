@@ -15,25 +15,22 @@ export class TokenService {
   constructor(private readonly jwtService: JwtService) {}
 
   signAccessToken(payload: AccessTokenPayloadCreate) {
-    return this.jwtService.sign(
-      { ...payload, uuid: uuidv4() },
-      {
-        secret: envConfig.ACCESS_TOKEN_SECRET,
-        expiresIn: envConfig.ACCESS_TOKEN_EXPIRES_IN as StringValue,
-        algorithm: 'HS256',
-      },
-    );
+    return this.jwtService.sign(payload, {
+      secret: envConfig.ACCESS_TOKEN_SECRET,
+      expiresIn: envConfig.ACCESS_TOKEN_EXPIRES_IN as StringValue,
+      algorithm: 'HS256',
+      // jwtid → claim "jti" trong payload, dùng làm key blacklist
+      jwtid: uuidv4(),
+    });
   }
 
   signRefreshToken(payload: RefreshTokenPayloadCreate) {
-    return this.jwtService.sign(
-      { ...payload, uuid: uuidv4() },
-      {
-        secret: envConfig.REFRESH_TOKEN_SECRET,
-        expiresIn: envConfig.REFRESH_TOKEN_EXPIRES_IN as StringValue,
-        algorithm: 'HS256',
-      },
-    );
+    return this.jwtService.sign(payload, {
+      secret: envConfig.REFRESH_TOKEN_SECRET,
+      expiresIn: envConfig.REFRESH_TOKEN_EXPIRES_IN as StringValue,
+      algorithm: 'HS256',
+      jwtid: uuidv4(),
+    });
   }
 
   verifyAccessToken(token: string): Promise<VerifyAccessTokenPayload> {
