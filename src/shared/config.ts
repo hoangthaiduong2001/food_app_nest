@@ -26,6 +26,11 @@ const configSchema = z.object({
     .default('info'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  S3_REGION: z.string().optional(),
+  S3_ACCESS_KEY: z.string().optional(),
+  S3_SECRET_KEY: z.string().optional(),
+  S3_BUCKET_NAME: z.string().optional(),
+  S3_PUBLIC_URL: z.string().optional(),
   //   PAYMENT_API_KEY: z.string(),
   //   ADMIN_NAME: z.string(),
   //   ADMIN_EMAIL: z.string(),
@@ -38,10 +43,6 @@ const configSchema = z.object({
   //   GOOGLE_REDIRECT_URI: z.string(),
   //   GOOGLE_CLIENT_REDIRECT_URI: z.string(),
   //   PREFIX_STATIC_ENPOINT: z.string(),
-  //   S3_REGION: z.string(),
-  //   S3_ACCESS_KEY: z.string(),
-  //   S3_SECRET_KEY: z.string(),
-  //   S3_BUCKET_NAME: z.string(),
   //   REDIS_URL: z.string(),
 });
 

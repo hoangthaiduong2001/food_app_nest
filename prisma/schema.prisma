@@ -240,6 +240,9 @@ model Product {
   updatedById                 Int?
   updatedBy                   User?                  @relation("ProductUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
+  // Full-text search vector (name + slug). Quản lý qua trigger SQL, không qua Prisma.
+  searchVector                Unsupported("tsvector")?
+
   deletedAt                   DateTime?
   createdAt                   DateTime               @default(now())
   updatedAt                   DateTime               @updatedAt

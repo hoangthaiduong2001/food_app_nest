@@ -19,7 +19,6 @@ export class TokenService {
       secret: envConfig.ACCESS_TOKEN_SECRET,
       expiresIn: envConfig.ACCESS_TOKEN_EXPIRES_IN as StringValue,
       algorithm: 'HS256',
-      // jwtid → claim "jti" trong payload, dùng làm key blacklist
       jwtid: uuidv4(),
     });
   }

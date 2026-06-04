@@ -19,7 +19,8 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthSwagger } from '@/shared/swagger/auth-swagger.decorator';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { ZodSerializerDto } from 'nestjs-zod';
@@ -116,7 +117,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
+  @AuthSwagger()
   @ApiOperation({
     summary: 'Logout current device — revoke refresh + blacklist access token',
   })
@@ -145,7 +146,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @ApiBearerAuth()
+  @AuthSwagger()
   @ApiOperation({ summary: 'Get current authenticated user profile' })
   @ApiSuccess(MeResDto, { description: 'Get information successfully' })
   @ApiError(401, 'Missing or invalid token', 'Unauthorized')
@@ -157,7 +158,7 @@ export class AuthController {
   }
 
   @Post('api-keys')
-  @ApiBearerAuth()
+  @AuthSwagger()
   @ApiOperation({ summary: 'Create a new API key (one-time view raw key)' })
   @ApiSuccess(CreateApiKeyResDto, { description: 'API key created' })
   @ApiError(400, 'Validation error', 'Label required')
@@ -176,7 +177,7 @@ export class AuthController {
   }
 
   @Get('api-keys')
-  @ApiBearerAuth()
+  @AuthSwagger()
   @ApiOperation({ summary: 'List my API keys (no raw key returned)' })
   @ApiSuccess(ListApiKeyResDto, { description: 'OK' })
   @ApiError(401, 'Missing or invalid token', 'Unauthorized')
@@ -187,7 +188,7 @@ export class AuthController {
   }
 
   @Delete('api-keys/:id')
-  @ApiBearerAuth()
+  @AuthSwagger()
   @ApiOperation({ summary: 'Revoke an API key' })
   @ApiSuccess(RevokeApiKeyResDto, { description: 'API key revoked' })
   @ApiError(401, 'Missing or invalid token', 'Unauthorized')

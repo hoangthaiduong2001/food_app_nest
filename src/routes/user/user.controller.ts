@@ -6,7 +6,8 @@ import {
   ApiSuccess,
 } from '@/shared/swagger/api-response.decorator';
 import { Body, Controller, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthSwagger } from '@/shared/swagger/auth-swagger.decorator';
 import { ZodSerializerDto } from 'nestjs-zod';
 import { CreateUserBodyDto, CreateUserResDto } from './user.dto';
 import { UserService } from './user.service';
@@ -18,7 +19,7 @@ export class UserController {
 
   @Roles(RoleName.Admin)
   @Post()
-  @ApiBearerAuth()
+  @AuthSwagger()
   @ApiOperation({ summary: 'Create a new user (admin only)' })
   @ApiSuccess(CreateUserResDto, { description: 'User created successfully' })
   @ApiError(400, 'Validation error', 'Email required')

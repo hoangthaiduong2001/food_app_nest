@@ -5,7 +5,12 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './routes/auth/auth.module';
+import { BrandModule } from './routes/brand/brand.module';
+import { CategoryModule } from './routes/category/category.module';
 import { HealthModule } from './routes/health/health.module';
+import { InventoryModule } from './routes/inventory/inventory.module';
+import { ProductModule } from './routes/product/product.module';
+import { UploadModule } from './routes/upload/upload.module';
 import { UserModule } from './routes/user/user.module';
 import envConfig from './shared/config';
 import { PrismaService } from './shared/services/prisma.service';
@@ -63,6 +68,11 @@ import { ShareModule } from './shared/share.module';
     ShareModule,
     AuthModule,
     UserModule,
+    BrandModule,
+    CategoryModule,
+    ProductModule,
+    InventoryModule,
+    UploadModule,
     HealthModule,
   ],
   controllers: [AppController],

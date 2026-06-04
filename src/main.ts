@@ -1,5 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import 'dotenv/config';
+import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
@@ -13,7 +14,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
 
-  app.use(helmet());
+  const helmetDefault = helmet();
+  const helmetForDocs = helmet({ contentSecurityPolicy: false });
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/docs')) {
+      return helmetForDocs(req, res, next);
+    }
+    return helmetDefault(req, res, next);
+  });
 
   const corsOrigins = envConfig.CORS_ORIGINS.split(',')
     .map((o) => o.trim())
