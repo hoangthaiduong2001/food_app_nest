@@ -9,6 +9,7 @@ import { BrandModule } from './routes/brand/brand.module';
 import { CategoryModule } from './routes/category/category.module';
 import { HealthModule } from './routes/health/health.module';
 import { InventoryModule } from './routes/inventory/inventory.module';
+import { CartModule } from './routes/cart/cart.module';
 import { ProductModule } from './routes/product/product.module';
 import { UploadModule } from './routes/upload/upload.module';
 import { UserModule } from './routes/user/user.module';
@@ -73,6 +74,7 @@ import { ShareModule } from './shared/share.module';
     ProductModule,
     InventoryModule,
     UploadModule,
+    CartModule,
     HealthModule,
   ],
   controllers: [AppController],
