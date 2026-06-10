@@ -6,7 +6,9 @@ import { PassportModule } from '@nestjs/passport';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtOrApiKeyGuard } from './guards/jwt-or-api-key.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { DistributedLockService } from './services/distributed-lock.service';
 import { HashingService } from './services/hashing.service';
+import { IdempotencyService } from './services/idempotency.service';
 import { PrismaService } from './services/prisma.service';
 import { RedisService } from './services/redis.service';
 import { TokenBlacklistService } from './services/token-blacklist.service';
@@ -32,6 +34,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     TokenService,
     RedisService,
     TokenBlacklistService,
+    IdempotencyService,
+    DistributedLockService,
     JwtStrategy,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtOrApiKeyGuard },
@@ -43,6 +47,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     TokenService,
     RedisService,
     TokenBlacklistService,
+    IdempotencyService,
+    DistributedLockService,
   ],
 })
 export class ShareModule {}

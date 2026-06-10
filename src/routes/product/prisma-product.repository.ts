@@ -32,7 +32,6 @@ type RawProduct = {
   name: string;
   basePrice: number;
   virtualPrice: number;
-  stock: number;
   isActive: boolean;
   slug: string | null;
   brandId: number;
@@ -58,12 +57,14 @@ export class PrismaProductRepository implements IProductRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   private toResponse(p: RawProduct): ProductResType {
+    // totalStock = tổng stock các variant (nguồn stock thật, không dùng p.stock)
+    const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0);
     return {
       id: p.id,
       name: p.name,
       basePrice: p.basePrice,
       virtualPrice: p.virtualPrice,
-      stock: p.stock,
+      totalStock,
       isActive: p.isActive,
       slug: p.slug,
       brandId: p.brandId,
@@ -116,7 +117,6 @@ export class PrismaProductRepository implements IProductRepository {
         name: true,
         basePrice: true,
         virtualPrice: true,
-        stock: true,
         isActive: true,
         slug: true,
         brandId: true,
@@ -124,6 +124,11 @@ export class PrismaProductRepository implements IProductRepository {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
+        // Lấy stock từng variant để tính totalStock
+        variants: {
+          where: { deletedAt: null },
+          select: { stock: true },
+        },
       },
     });
 
@@ -137,7 +142,7 @@ export class PrismaProductRepository implements IProductRepository {
         name: p.name,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
-        stock: p.stock,
+        totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0),
         isActive: p.isActive,
         slug: p.slug,
         brandId: p.brandId,
@@ -171,7 +176,7 @@ export class PrismaProductRepository implements IProductRepository {
         name: string;
         basePrice: number;
         virtualPrice: number;
-        stock: number;
+        totalStock: bigint;
         isActive: boolean;
         slug: string | null;
         brandId: number;
@@ -183,9 +188,13 @@ export class PrismaProductRepository implements IProductRepository {
       }>
     >`
       SELECT
-        p.id, p.name, p."basePrice", p."virtualPrice", p.stock,
+        p.id, p.name, p."basePrice", p."virtualPrice",
         p."isActive", p.slug, p."brandId", p.images,
         p."publishedAt", p."createdAt", p."updatedAt",
+        COALESCE((
+          SELECT SUM(pv.stock) FROM "ProductVariant" pv
+          WHERE pv."productId" = p.id AND pv."deletedAt" IS NULL
+        ), 0) AS "totalStock",
         ts_rank(p."searchVector", plainto_tsquery('simple', ${q})) AS rank
       FROM "Product" p
       WHERE p."deletedAt" IS NULL
@@ -206,7 +215,7 @@ export class PrismaProductRepository implements IProductRepository {
         name: p.name,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
-        stock: p.stock,
+        totalStock: Number(p.totalStock), // SUM() trả bigint → convert
         isActive: p.isActive,
         slug: p.slug,
         brandId: p.brandId,

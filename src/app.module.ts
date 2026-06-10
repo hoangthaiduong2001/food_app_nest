@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
 import { IncomingMessage, ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
@@ -6,19 +7,22 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './routes/auth/auth.module';
 import { BrandModule } from './routes/brand/brand.module';
+import { CartModule } from './routes/cart/cart.module';
 import { CategoryModule } from './routes/category/category.module';
 import { HealthModule } from './routes/health/health.module';
 import { InventoryModule } from './routes/inventory/inventory.module';
-import { CartModule } from './routes/cart/cart.module';
+import { OrderModule } from './routes/order/order.module';
 import { ProductModule } from './routes/product/product.module';
 import { UploadModule } from './routes/upload/upload.module';
 import { UserModule } from './routes/user/user.module';
+import { WalletModule } from './routes/wallet/wallet.module';
 import envConfig from './shared/config';
 import { PrismaService } from './shared/services/prisma.service';
 import { ShareModule } from './shared/share.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     LoggerModule.forRoot({
       pinoHttp: {
         level: envConfig.LOG_LEVEL,
@@ -65,7 +69,6 @@ import { ShareModule } from './shared/share.module';
         },
       },
     }),
-
     ShareModule,
     AuthModule,
     UserModule,
@@ -75,6 +78,8 @@ import { ShareModule } from './shared/share.module';
     InventoryModule,
     UploadModule,
     CartModule,
+    OrderModule,
+    WalletModule,
     HealthModule,
   ],
   controllers: [AppController],

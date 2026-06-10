@@ -54,7 +54,7 @@ export const ProductResSchema = z.object({
   name: z.string(),
   basePrice: z.number(),
   virtualPrice: z.number(),
-  stock: z.number(),
+  totalStock: z.number(),
   isActive: z.boolean(),
   slug: z.string().nullable(),
   brandId: z.number(),

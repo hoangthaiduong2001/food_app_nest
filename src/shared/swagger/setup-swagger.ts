@@ -75,6 +75,8 @@ export function setupSwagger(app: INestApplication): void {
     )
     .addTag('Inventory', 'Stock management with pessimistic lock')
     .addTag('Cart', 'Shopping cart (Redis-backed, TTL 30 days)')
+    .addTag('Order', 'Checkout, order lifecycle (state machine), idempotency')
+    .addTag('Wallet', 'User wallet — deposit, withdraw, pay order (pessimistic lock)')
     .addTag('Upload', 'S3 presigned URL for direct file upload')
     .addTag('Health', 'Liveness & readiness probes')
     .build();
