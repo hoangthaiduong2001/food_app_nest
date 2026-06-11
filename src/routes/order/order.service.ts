@@ -15,10 +15,12 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CartRepository } from '../cart/cart.repository';
+import { EmailService } from '../email/email.service';
 import { WalletTransactionType } from '../wallet/wallet.model';
 import { WalletRepository } from '../wallet/wallet.repository';
 import {
@@ -32,6 +34,8 @@ const CHECKOUT_SCOPE = 'checkout';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     private readonly orderRepository: OrderRepository,
     private readonly cartRepository: CartRepository,
@@ -39,6 +43,7 @@ export class OrderService {
     private readonly idempotencyService: IdempotencyService,
     private readonly lockService: DistributedLockService,
     private readonly walletRepository: WalletRepository,
+    private readonly emailService: EmailService,
   ) {}
 
   /**
@@ -191,7 +196,33 @@ export class OrderService {
       await this.cartRepository.removeItem(userId, variantId);
     }
 
-    return this.toOrderResponse(order);
+    const result = this.toOrderResponse(order);
+
+    // 5. Gửi email xác nhận — fire-and-forget, không block response
+    this.prismaService.user
+      .findUnique({ where: { id: userId }, select: { email: true, name: true } })
+      .then((user) => {
+        if (!user) return;
+        const receiver = body.receiver as ReceiverType;
+        return this.emailService.sendOrderConfirmation({
+          to: user.email,
+          customerName: user.name,
+          orderId: result.id,
+          items: result.items.map((i) => ({
+            productName: i.productName,
+            quantity: i.quantity,
+            totalPrice: i.totalPrice.toLocaleString('vi-VN') + ' đ',
+          })),
+          finalAmount: result.finalAmount.toLocaleString('vi-VN') + ' đ',
+          paymentMethod: result.paymentMethod,
+          shippingAddress: receiver.address,
+        });
+      })
+      .catch((err: unknown) => {
+        this.logger.error('Failed to enqueue order-confirmation email', err);
+      });
+
+    return result;
   }
 
   async getOrderForUser(

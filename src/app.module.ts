@@ -15,6 +15,10 @@ import { OrderModule } from './routes/order/order.module';
 import { ProductModule } from './routes/product/product.module';
 import { UploadModule } from './routes/upload/upload.module';
 import { UserModule } from './routes/user/user.module';
+import { EmailModule } from './routes/email/email.module';
+import { InventoryJobModule } from './routes/inventory-job/inventory-job.module';
+import { PaymentModule } from './routes/payment/payment.module';
+import { ReportModule } from './routes/report/report.module';
 import { WalletModule } from './routes/wallet/wallet.module';
 import envConfig from './shared/config';
 import { PrismaService } from './shared/services/prisma.service';
@@ -80,6 +84,10 @@ import { ShareModule } from './shared/share.module';
     CartModule,
     OrderModule,
     WalletModule,
+    PaymentModule,
+    EmailModule,
+    InventoryJobModule,
+    ReportModule,
     HealthModule,
   ],
   controllers: [AppController],

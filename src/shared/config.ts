@@ -31,6 +31,14 @@ const configSchema = z.object({
   S3_SECRET_KEY: z.string().optional(),
   S3_BUCKET_NAME: z.string().optional(),
   S3_PUBLIC_URL: z.string().optional(),
+  // Stripe (test mode)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // AWS SES (email)
+  SES_REGION: z.string().default('ap-southeast-1'),
+  SES_ACCESS_KEY: z.string().optional(),
+  SES_SECRET_KEY: z.string().optional(),
+  SES_FROM_EMAIL: z.string().default('noreply@example.com'),
   //   PAYMENT_API_KEY: z.string(),
   //   ADMIN_NAME: z.string(),
   //   ADMIN_EMAIL: z.string(),

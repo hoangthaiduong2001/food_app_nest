@@ -443,7 +443,7 @@ export class WalletRepository {
       return tx.wallet.update({
         where: { id: locked.id },
         data: {
-          currency: currency as never,
+          currency: currency,
           balance: convertedAmount,
         },
         select: { currency: true, accountNumber: true, balance: true },

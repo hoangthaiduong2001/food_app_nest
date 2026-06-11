@@ -11,7 +11,10 @@ import { zodValidationPipe } from './shared/pipes/zod-validation.pipe';
 import { setupSwagger } from './shared/swagger/setup-swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    rawBody: true,
+  });
   app.useLogger(app.get(Logger));
 
   const helmetDefault = helmet();

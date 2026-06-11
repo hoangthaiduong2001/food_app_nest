@@ -1,8 +1,10 @@
 import { toISO } from '@/shared/model/transform.helper';
+import { EmailService } from '@/routes/email/email.service';
 import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -13,10 +15,17 @@ import {
 } from './deposit.model';
 import { CurrencyType } from './currency.model';
 import { DepositRepository } from './deposit.repository';
+import { PrismaService } from '@/shared/services/prisma.service';
 
 @Injectable()
 export class DepositService {
-  constructor(private readonly depositRepository: DepositRepository) {}
+  private readonly logger = new Logger(DepositService.name);
+
+  constructor(
+    private readonly depositRepository: DepositRepository,
+    private readonly prismaService: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async createRequest(
     userId: number,
@@ -93,7 +102,26 @@ export class DepositService {
       req.amount,
       adminId,
     );
-    return this.toResponse(updated);
+    const result = this.toResponse(updated);
+
+    this.prismaService.user
+      .findUnique({ where: { id: req.userId }, select: { email: true, name: true } })
+      .then((user) => {
+        if (!user) return;
+        return this.emailService.sendDepositApproved({
+          to: user.email,
+          customerName: user.name,
+          requestId: id,
+          amount: req.amount.toLocaleString('vi-VN'),
+          currency: req.currency,
+          newBalance: 'check your wallet',
+        });
+      })
+      .catch((err: unknown) => {
+        this.logger.error('Failed to enqueue deposit-approved email', err);
+      });
+
+    return result;
   }
 
   async reject(
@@ -116,7 +144,26 @@ export class DepositService {
       adminId,
       rejectReason,
     );
-    return this.toResponse(updated);
+    const result = this.toResponse(updated);
+
+    this.prismaService.user
+      .findUnique({ where: { id: req.userId }, select: { email: true, name: true } })
+      .then((user) => {
+        if (!user) return;
+        return this.emailService.sendDepositRejected({
+          to: user.email,
+          customerName: user.name,
+          requestId: id,
+          amount: req.amount.toLocaleString('vi-VN'),
+          currency: req.currency,
+          rejectReason,
+        });
+      })
+      .catch((err: unknown) => {
+        this.logger.error('Failed to enqueue deposit-rejected email', err);
+      });
+
+    return result;
   }
 
   private assertPending(status: string) {

@@ -57,7 +57,6 @@ export class PrismaProductRepository implements IProductRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   private toResponse(p: RawProduct): ProductResType {
-    // totalStock = tổng stock các variant (nguồn stock thật, không dùng p.stock)
     const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0);
     return {
       id: p.id,
@@ -124,7 +123,6 @@ export class PrismaProductRepository implements IProductRepository {
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
-        // Lấy stock từng variant để tính totalStock
         variants: {
           where: { deletedAt: null },
           select: { stock: true },
@@ -215,7 +213,7 @@ export class PrismaProductRepository implements IProductRepository {
         name: p.name,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
-        totalStock: Number(p.totalStock), // SUM() trả bigint → convert
+        totalStock: Number(p.totalStock),
         isActive: p.isActive,
         slug: p.slug,
         brandId: p.brandId,

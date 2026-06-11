@@ -49,6 +49,7 @@ export default tseslint.config(
       'no-useless-catch': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
       '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
     },
   },
 );
