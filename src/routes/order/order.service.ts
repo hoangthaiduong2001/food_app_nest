@@ -14,13 +14,17 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { PubSub } from 'graphql-subscriptions';
 import { CartRepository } from '../cart/cart.repository';
 import { EmailService } from '../email/email.service';
+import { PubSubEvent } from '@/shared/constants/queue.constant';
+import { PUB_SUB } from '@/shared/pubsub.provider';
 import { WalletTransactionType } from '../wallet/wallet.model';
 import { WalletRepository } from '../wallet/wallet.repository';
 import {
@@ -44,6 +48,7 @@ export class OrderService {
     private readonly lockService: DistributedLockService,
     private readonly walletRepository: WalletRepository,
     private readonly emailService: EmailService,
+    @Inject(PUB_SUB) private readonly pubSub: PubSub,
   ) {}
 
   /**
@@ -313,6 +318,11 @@ export class OrderService {
       })),
       refundFn,
     );
+
+    // Publish real-time event cho GraphQL subscription
+    void this.pubSub.publish(PubSubEvent.ORDER_STATUS_CHANGED, {
+      orderStatusChanged: { id: orderId, status: newStatus, updatedAt: new Date() },
+    });
 
     return this.toOrderResponse(updated!);
   }

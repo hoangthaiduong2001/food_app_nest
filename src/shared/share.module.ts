@@ -4,7 +4,8 @@ import { Global, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGqlGuard } from './guards/throttler-gql.guard';
 import { QueueName } from './constants/queue.constant';
 import { JwtOrApiKeyGuard } from './guards/jwt-or-api-key.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -54,7 +55,7 @@ import envConfig from './config';
     IdempotencyService,
     DistributedLockService,
     JwtStrategy,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGqlGuard },
     { provide: APP_GUARD, useClass: JwtOrApiKeyGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

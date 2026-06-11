@@ -1,5 +1,9 @@
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
+import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
+import { GraphqlModule } from './routes/graphql/graphql.module';
+import { PubSubModule } from './shared/pubsub.module';
 import { randomUUID } from 'crypto';
 import { IncomingMessage, ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
@@ -73,6 +77,14 @@ import { ShareModule } from './shared/share.module';
         },
       },
     }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'schema.gql',
+      subscriptions: { 'graphql-ws': true },
+      context: ({ req }: { req: Request }) => ({ req }),
+    }),
+    PubSubModule,
+    GraphqlModule,
     ShareModule,
     AuthModule,
     UserModule,

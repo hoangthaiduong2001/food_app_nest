@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:3003/graphql -X POST -H \"Content-Type: application/json\" -d '{\"query\":\"{ products\\(limit: 2\\) { data { id name basePrice } hasMore } }\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(pkill -f \"ts-node.*main.ts\" 2>/dev/null; sleep 1 && npx ts-node -r tsconfig-paths/register src/main.ts > /tmp/nest-app.log 2>&1 & *)",
+      "Bash(curl -s http://localhost:3003/api/v1/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"admin@example.com\",\"password\":\"Admin123!\"}')",
+      "Bash(curl -s http://localhost:3003/api/v1/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"duongtantien1@gmail.com\",\"password\":\"Admin123456@\"}')",
+      "Bash(curl -s http://localhost:3003/docs-json)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(m,p\\) for p,v in d.get\\('paths',{}\\).items\\(\\) for m in v if 'auth' in p.lower\\(\\)]\")",
+      "Bash(curl -s http://localhost:3003/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"duongtantien1@gmail.com\",\"password\":\"123456\"}')"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  }
+}

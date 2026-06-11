@@ -5,12 +5,18 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { GqlContextType } from '@nestjs/graphql';
 import { Response } from 'express';
 import { ApiErrorResponse } from '../types/response.type';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
+    // GraphQL errors được Apollo tự xử lý — không dùng HTTP response
+    if (host.getType<GqlContextType>() === 'graphql') {
+      throw exception;
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 

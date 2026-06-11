@@ -18,3 +18,7 @@ export const InventoryJobName = {
 export const ReportJobName = {
   DAILY_REVENUE: 'daily-revenue',
 } as const;
+
+export const PubSubEvent = {
+  ORDER_STATUS_CHANGED: 'ORDER_STATUS_CHANGED',
+} as const;

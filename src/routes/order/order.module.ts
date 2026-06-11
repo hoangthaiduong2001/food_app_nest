@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EmailModule } from '../email/email.module';
+import { PubSubModule } from '@/shared/pubsub.module';
 import { CartRepository } from '../cart/cart.repository';
 import { WalletModule } from '../wallet/wallet.module';
 import { OrderController } from './order.controller';
@@ -7,9 +8,9 @@ import { OrderRepository } from './order.repository';
 import { OrderService } from './order.service';
 
 @Module({
-  imports: [WalletModule, EmailModule],
+  imports: [WalletModule, EmailModule, PubSubModule],
   controllers: [OrderController],
   providers: [OrderService, OrderRepository, CartRepository],
-  exports: [OrderService],
+  exports: [OrderService, OrderRepository],
 })
 export class OrderModule {}

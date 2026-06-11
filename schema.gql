@@ -1,0 +1,123 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type UserType {
+  id: Int!
+  email: String!
+  name: String!
+  avatar: String
+  status: String!
+  createdAt: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type VariantType {
+  id: Int!
+  sku: String!
+  name: String
+  price: Float!
+  stock: Int!
+  isDefault: Boolean!
+  isActive: Boolean!
+}
+
+type ProductCategoryType {
+  id: Int!
+  name: String!
+}
+
+type ProductType {
+  id: Int!
+  name: String!
+  basePrice: Float!
+  virtualPrice: Float!
+  totalStock: Int!
+  isActive: Boolean!
+  slug: String
+  brandId: Int!
+  images: [String!]!
+  createdAt: DateTime!
+  categories: [ProductCategoryType!]!
+  variants: [VariantType!]!
+}
+
+type ProductListType {
+  data: [ProductType!]!
+  nextCursor: Int
+  hasMore: Boolean!
+}
+
+type OrderItemType {
+  id: Int!
+  productId: Int!
+  variantId: Int
+  quantity: Int!
+  unitPrice: Float!
+  totalPrice: Float!
+  productName: String!
+  productImage: String
+}
+
+type ReceiverType {
+  name: String!
+  phone: String!
+  address: String!
+}
+
+type OrderType {
+  id: Int!
+  userId: Int!
+  status: String!
+  paymentStatus: String!
+  paymentMethod: String!
+  shippingFee: Float!
+  totalAmount: Float!
+  finalAmount: Float!
+  receiver: ReceiverType!
+  items: [OrderItemType!]!
+  createdAt: DateTime!
+  user: UserType
+}
+
+type OrderListItemType {
+  id: Int!
+  userId: Int!
+  status: String!
+  paymentStatus: String!
+  paymentMethod: String!
+  finalAmount: Float!
+  createdAt: DateTime!
+}
+
+type OrderStatusChangedType {
+  id: Int!
+  status: String!
+  updatedAt: DateTime!
+}
+
+type Query {
+  """Get. info user login"""
+  me: UserType!
+
+  """List product (cursor-based pagination)"""
+  products(brandId: Int, categoryId: Int, q: String, limit: Int! = 20, cursor: Int): ProductListType!
+
+  """Detail product by id"""
+  product(id: Int!): ProductType!
+
+  """List orders of current user"""
+  orders(status: String, limit: Int! = 20, cursor: Int): [OrderListItemType!]!
+
+  """Detail order by id"""
+  order(id: Int!): OrderType!
+}
+
+type Subscription {
+  """Real-time update status order"""
+  orderStatusChanged(orderId: Int!): OrderStatusChangedType!
+}

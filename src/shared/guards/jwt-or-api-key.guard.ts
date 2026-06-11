@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 
@@ -32,6 +33,14 @@ export class JwtOrApiKeyGuard extends AuthGuard('jwt') {
     this.apiKeyGuard = new ApiKeyGuard();
   }
 
+  // Passport gọi getRequest() nội bộ — cần trả về đúng request cho cả HTTP và GQL
+  getRequest(context: ExecutionContext): Request {
+    if (context.getType<GqlContextType>() === 'graphql') {
+      return GqlExecutionContext.create(context).getContext<{ req: Request }>().req;
+    }
+    return context.switchToHttp().getRequest<Request>();
+  }
+
   canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -39,15 +48,26 @@ export class JwtOrApiKeyGuard extends AuthGuard('jwt') {
     ]);
     if (isPublic) return true;
 
-    const req = context.switchToHttp().getRequest<Request>();
-    const hasBearer = req.headers.authorization
-      ?.toLowerCase()
-      .startsWith('bearer ');
+    // GraphQL context — lấy req từ GQL context thay vì HTTP context
+    const req =
+      context.getType<GqlContextType>() === 'graphql'
+        ? GqlExecutionContext.create(context).getContext<{ req: Request }>().req
+        : context.switchToHttp().getRequest<Request>();
+
+    const authHeader = req.headers.authorization?.toLowerCase();
+    const hasBearer = authHeader?.startsWith('bearer ');
+    const hasApiKey = !!req.headers['x-api-key'];
+
+    // GraphQL resolvers tự quản lý auth qua @UseGuards(GqlAuthGuard)
+    // Global guard chỉ cần verify token nếu có — không ép buộc auth
+    if (context.getType<GqlContextType>() === 'graphql') {
+      if (!hasBearer) return true;
+      return super.canActivate(context);
+    }
 
     if (!hasBearer) {
-      return this.apiKeyGuard.canActivate(context) as
-        | boolean
-        | Promise<boolean>;
+      if (!hasApiKey) return true; // route không cần auth sẽ được guard riêng handle
+      return this.apiKeyGuard.canActivate(context) as boolean | Promise<boolean>;
     }
 
     return super.canActivate(context);
