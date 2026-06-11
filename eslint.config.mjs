@@ -50,6 +50,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
       '@typescript-eslint/await-thenable': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/require-await': 'off',
     },
   },
 );

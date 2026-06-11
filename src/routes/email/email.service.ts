@@ -37,14 +37,20 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly fromEmail = envConfig.SES_FROM_EMAIL;
 
-  constructor(@InjectQueue(QueueName.EMAIL) private readonly emailQueue: Queue) {}
+  constructor(
+    @InjectQueue(QueueName.EMAIL) private readonly emailQueue: Queue,
+  ) {}
 
-  async sendOrderConfirmation(payload: OrderConfirmationPayload): Promise<void> {
+  async sendOrderConfirmation(
+    payload: OrderConfirmationPayload,
+  ): Promise<void> {
     await this.emailQueue.add(EmailJobName.ORDER_CONFIRMATION, {
       from: this.fromEmail,
       ...payload,
     });
-    this.logger.log(`Queued order-confirmation email to ${payload.to} for order #${payload.orderId}`);
+    this.logger.log(
+      `Queued order-confirmation email to ${payload.to} for order #${payload.orderId}`,
+    );
   }
 
   async sendDepositApproved(payload: DepositApprovedPayload): Promise<void> {
@@ -52,7 +58,9 @@ export class EmailService {
       from: this.fromEmail,
       ...payload,
     });
-    this.logger.log(`Queued deposit-approved email to ${payload.to} for request #${payload.requestId}`);
+    this.logger.log(
+      `Queued deposit-approved email to ${payload.to} for request #${payload.requestId}`,
+    );
   }
 
   async sendDepositRejected(payload: DepositRejectedPayload): Promise<void> {
@@ -60,6 +68,12 @@ export class EmailService {
       from: this.fromEmail,
       ...payload,
     });
-    this.logger.log(`Queued deposit-rejected email to ${payload.to} for request #${payload.requestId}`);
+    this.logger.log(
+      `Queued deposit-rejected email to ${payload.to} for request #${payload.requestId}`,
+    );
+  }
+
+  async enqueue(jobName: string, data: Record<string, unknown>): Promise<void> {
+    await this.emailQueue.add(jobName, { from: this.fromEmail, ...data });
   }
 }

@@ -2,7 +2,9 @@ import {
   OrderStatus,
   OrderStatusType,
 } from '@/shared/constants/order.constant';
+import { PubSubEvent } from '@/shared/constants/queue.constant';
 import { RoleName } from '@/shared/constants/role.constant';
+import { PUB_SUB } from '@/shared/pubsub.provider';
 import {
   DistributedLockService,
   LockBusyError,
@@ -21,10 +23,10 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PubSub } from 'graphql-subscriptions';
+import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CartRepository } from '../cart/cart.repository';
 import { EmailService } from '../email/email.service';
-import { PubSubEvent } from '@/shared/constants/queue.constant';
-import { PUB_SUB } from '@/shared/pubsub.provider';
+import { NotificationService } from '../notification/notification.service';
 import { WalletTransactionType } from '../wallet/wallet.model';
 import { WalletRepository } from '../wallet/wallet.repository';
 import {
@@ -48,6 +50,8 @@ export class OrderService {
     private readonly lockService: DistributedLockService,
     private readonly walletRepository: WalletRepository,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
+    private readonly activityLogService: ActivityLogService,
     @Inject(PUB_SUB) private readonly pubSub: PubSub,
   ) {}
 
@@ -203,9 +207,24 @@ export class OrderService {
 
     const result = this.toOrderResponse(order);
 
-    // 5. Gửi email xác nhận — fire-and-forget, không block response
+    // 5. Activity log — ghi vào MongoDB
+    this.activityLogService.log({
+      userId,
+      action: 'order.created',
+      resourceType: 'order',
+      resourceId: String(result.id),
+      metadata: {
+        paymentMethod: result.paymentMethod,
+        finalAmount: result.finalAmount,
+      },
+    });
+
+    // 6. Gửi email xác nhận — fire-and-forget, không block response
     this.prismaService.user
-      .findUnique({ where: { id: userId }, select: { email: true, name: true } })
+      .findUnique({
+        where: { id: userId },
+        select: { email: true, name: true },
+      })
       .then((user) => {
         if (!user) return;
         const receiver = body.receiver as ReceiverType;
@@ -319,9 +338,28 @@ export class OrderService {
       refundFn,
     );
 
-    // Publish real-time event cho GraphQL subscription
     void this.pubSub.publish(PubSubEvent.ORDER_STATUS_CHANGED, {
-      orderStatusChanged: { id: orderId, status: newStatus, updatedAt: new Date() },
+      orderStatusChanged: {
+        id: orderId,
+        status: newStatus,
+        updatedAt: new Date(),
+      },
+    });
+
+    // WebSocket + in-app notification
+    this.notificationService.notifyOrderStatusChanged({
+      userId: order.userId,
+      orderId,
+      status: newStatus,
+    });
+
+    // Activity log vào MongoDB
+    this.activityLogService.log({
+      userId: user.userId,
+      action: 'order.status_changed',
+      resourceType: 'order',
+      resourceId: String(orderId),
+      metadata: { from: order.status, to: newStatus },
     });
 
     return this.toOrderResponse(updated!);

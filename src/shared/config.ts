@@ -39,6 +39,10 @@ const configSchema = z.object({
   SES_ACCESS_KEY: z.string().optional(),
   SES_SECRET_KEY: z.string().optional(),
   SES_FROM_EMAIL: z.string().default('noreply@example.com'),
+  // MongoDB (activity logs)
+  MONGODB_URI: z.string().optional(),
+  // Cache TTL (seconds)
+  CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(300),
   //   PAYMENT_API_KEY: z.string(),
   //   ADMIN_NAME: z.string(),
   //   ADMIN_EMAIL: z.string(),

@@ -3,11 +3,11 @@ import { CurrentUser } from '@/shared/decorator/current-user.decorator';
 import { Public } from '@/shared/decorator/public.decorator';
 import { Roles } from '@/shared/decorator/roles.decorator';
 import { SuccessMessage } from '@/shared/decorator/success-message.decorator';
-import {
-  ApiError,
-  ApiSuccess,
-} from '@/shared/swagger/api-response.decorator';
+import { HttpCacheInterceptor } from '@/shared/interceptor/http-cache.interceptor';
+import { ApiError, ApiSuccess } from '@/shared/swagger/api-response.decorator';
+import { AuthSwagger } from '@/shared/swagger/auth-swagger.decorator';
 import type { ActiveUserData } from '@/shared/types/active-user.type';
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import {
   Body,
   Controller,
@@ -20,11 +20,10 @@ import {
   Patch,
   Post,
   Query,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthSwagger } from '@/shared/swagger/auth-swagger.decorator';
 import { ZodSerializerDto } from 'nestjs-zod';
-import { ProductService } from './product.service';
 import {
   CreateProductBodyDto,
   ListProductQueryDto,
@@ -32,6 +31,7 @@ import {
   ProductResDto,
   UpdateProductBodyDto,
 } from './product.dto';
+import { ProductService } from './product.service';
 
 @ApiTags('Product')
 @Controller('products')
@@ -40,6 +40,8 @@ export class ProductController {
 
   @Public()
   @Get()
+  @UseInterceptors(HttpCacheInterceptor)
+  @CacheTTL(60_000)
   @ApiOperation({ summary: 'List products (public, cursor pagination)' })
   @ApiSuccess(ListProductResDto, { description: 'OK' })
   @SuccessMessage('OK')
@@ -50,6 +52,9 @@ export class ProductController {
 
   @Public()
   @Get(':id')
+  @UseInterceptors(HttpCacheInterceptor)
+  @CacheKey('product-detail')
+  @CacheTTL(300_000)
   @ApiOperation({ summary: 'Get product detail (public)' })
   @ApiSuccess(ProductResDto, { description: 'OK' })
   @ApiError(404, 'Product not found', 'Product not found')

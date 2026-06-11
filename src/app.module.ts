@@ -1,30 +1,35 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
+import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
-import { GraphqlModule } from './routes/graphql/graphql.module';
-import { PubSubModule } from './shared/pubsub.module';
 import { randomUUID } from 'crypto';
 import { IncomingMessage, ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ActivityLogModule } from './routes/activity-log/activity-log.module';
 import { AuthModule } from './routes/auth/auth.module';
 import { BrandModule } from './routes/brand/brand.module';
 import { CartModule } from './routes/cart/cart.module';
 import { CategoryModule } from './routes/category/category.module';
+import { EmailModule } from './routes/email/email.module';
+import { GatewayModule } from './routes/gateway/gateway.module';
+import { GraphqlModule } from './routes/graphql/graphql.module';
 import { HealthModule } from './routes/health/health.module';
 import { InventoryModule } from './routes/inventory/inventory.module';
+import { InventoryJobModule } from './routes/inventory-job/inventory-job.module';
+import { NotificationModule } from './routes/notification/notification.module';
 import { OrderModule } from './routes/order/order.module';
+import { PaymentModule } from './routes/payment/payment.module';
 import { ProductModule } from './routes/product/product.module';
+import { ReportModule } from './routes/report/report.module';
 import { UploadModule } from './routes/upload/upload.module';
 import { UserModule } from './routes/user/user.module';
-import { EmailModule } from './routes/email/email.module';
-import { InventoryJobModule } from './routes/inventory-job/inventory-job.module';
-import { PaymentModule } from './routes/payment/payment.module';
-import { ReportModule } from './routes/report/report.module';
 import { WalletModule } from './routes/wallet/wallet.module';
 import envConfig from './shared/config';
+import { PubSubModule } from './shared/pubsub.module';
 import { PrismaService } from './shared/services/prisma.service';
 import { ShareModule } from './shared/share.module';
 
@@ -83,8 +88,21 @@ import { ShareModule } from './shared/share.module';
       subscriptions: { 'graphql-ws': true },
       context: ({ req }: { req: Request }) => ({ req }),
     }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: () => ({
+        ttl: envConfig.CACHE_TTL_SECONDS * 1000,
+        store: 'memory',
+      }),
+    }),
+    ...(envConfig.MONGODB_URI
+      ? [MongooseModule.forRoot(envConfig.MONGODB_URI, { serverSelectionTimeoutMS: 5000 })]
+      : []),
     PubSubModule,
     GraphqlModule,
+    GatewayModule,
+    NotificationModule,
+    ActivityLogModule,
     ShareModule,
     AuthModule,
     UserModule,
