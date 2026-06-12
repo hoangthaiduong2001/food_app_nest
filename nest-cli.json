@@ -4,8 +4,11 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
+    "watchAssets": true,
     "assets": [
       { "include": "routes/email/templates/**/*.hbs", "watchAssets": true }
-    ]
-  }
+    ],
+    "tsConfigPath": "tsconfig.json"
+  },
+  "generateOptions": {}
 }

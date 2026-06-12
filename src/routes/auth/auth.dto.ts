@@ -12,7 +12,12 @@ import {
   RegisterBodySchema,
   RegisterResSchema,
   RevokeApiKeyResSchema,
+  UpdateProfileBodySchema,
+  UpdateProfileResSchema,
 } from './auth.model';
+
+export class UpdateProfileBodyDto extends createZodDto(UpdateProfileBodySchema) {}
+export class UpdateProfileResDto extends createZodDto(UpdateProfileResSchema) {}
 
 export class LoginBodyDto extends createZodDto(LoginBodySchema) {}
 

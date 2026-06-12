@@ -56,9 +56,10 @@ export const OrderResSchema = z.object({
   createdAt: isoDateTime,
 });
 
-export const OrderListItemSchema = OrderResSchema.omit({
-  items: true,
-  receiver: true,
+export const OrderListItemSchema = OrderResSchema.omit({ items: true }).extend({
+  user: z
+    .object({ id: z.number(), name: z.string(), email: z.string() })
+    .optional(),
 });
 
 export const ListOrderQuerySchema = z
@@ -73,6 +74,13 @@ export const ListOrderQuerySchema = z
         OrderStatus.CANCELLED,
       ])
       .optional(),
+    // filter theo tên/phone người nhận (admin only)
+    search: z.string().trim().optional(),
+    // filter theo khoảng ngày tạo đơn (ISO 8601 string, e.g. 2024-01-01)
+    dateFrom: z.iso.date().optional(),
+    dateTo: z.iso.date().optional(),
+    // filter theo userId cụ thể (admin only)
+    userId: z.coerce.number().int().positive().optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     cursor: z.coerce.number().int().positive().optional(),
   })

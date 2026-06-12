@@ -63,7 +63,8 @@ export class OrderController {
   @Get()
   @AuthSwagger()
   @ApiOperation({
-    summary: 'List orders (user: own orders, admin: all) — cursor pagination',
+    summary:
+      'List orders — user: own orders; admin: all with filters (status, search, dateFrom, dateTo, userId)',
   })
   @ApiSuccess(ListOrderResDto, { description: 'OK' })
   @SuccessMessage('OK')

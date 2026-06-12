@@ -1,5 +1,6 @@
 import { toISO } from '@/shared/model/transform.helper';
 import { EmailService } from '@/routes/email/email.service';
+import { NotificationService } from '@/routes/notification/notification.service';
 import {
   ConflictException,
   ForbiddenException,
@@ -25,6 +26,7 @@ export class DepositService {
     private readonly depositRepository: DepositRepository,
     private readonly prismaService: PrismaService,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createRequest(
@@ -104,6 +106,15 @@ export class DepositService {
     );
     const result = this.toResponse(updated);
 
+    // WebSocket notification — fire-and-forget
+    const isDeposit = req.type === 'DEPOSIT';
+    this.notificationService.send({
+      userId: req.userId,
+      title: isDeposit ? 'Deposit approved' : 'Withdrawal approved',
+      body: `Your ${isDeposit ? 'deposit' : 'withdrawal'} of ${req.amount.toLocaleString('vi-VN')} ${req.currency} has been approved.`,
+      type: 'wallet',
+    });
+
     this.prismaService.user
       .findUnique({ where: { id: req.userId }, select: { email: true, name: true } })
       .then((user) => {
@@ -145,6 +156,15 @@ export class DepositService {
       rejectReason,
     );
     const result = this.toResponse(updated);
+
+    // WebSocket notification
+    const isDeposit = req.type === 'DEPOSIT';
+    this.notificationService.send({
+      userId: req.userId,
+      title: isDeposit ? 'Deposit rejected' : 'Withdrawal rejected',
+      body: `Your ${isDeposit ? 'deposit' : 'withdrawal'} of ${req.amount.toLocaleString('vi-VN')} ${req.currency} was rejected. Reason: ${rejectReason}`,
+      type: 'wallet',
+    });
 
     this.prismaService.user
       .findUnique({ where: { id: req.userId }, select: { email: true, name: true } })

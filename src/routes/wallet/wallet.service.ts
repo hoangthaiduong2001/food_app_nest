@@ -1,4 +1,5 @@
 import { toISO } from '@/shared/model/transform.helper';
+import { NotificationService } from '@/routes/notification/notification.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CurrencyType } from './currency.model';
 import {
@@ -11,7 +12,10 @@ import { WalletRepository } from './wallet.repository';
 
 @Injectable()
 export class WalletService {
-  constructor(private readonly walletRepository: WalletRepository) {}
+  constructor(
+    private readonly walletRepository: WalletRepository,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async getWalletInfo(userId: number): Promise<WalletInfoResType> {
     const wallet = await this.walletRepository.getOrCreate(userId);
@@ -64,18 +68,42 @@ export class WalletService {
     };
   }
 
-  transfer(
+  async transfer(
     fromUserId: number,
     toAccountNumber: string,
     amount: number,
     description?: string,
   ): Promise<TransferResType> {
-    return this.walletRepository.transfer({
+    const result = await this.walletRepository.transfer({
       fromUserId,
       toAccountNumber,
       amount,
       description,
     });
+
+    // Notify người gửi
+    this.notificationService.send({
+      userId: fromUserId,
+      title: 'Transfer sent',
+      body: `You sent ${amount.toLocaleString('vi-VN')} to account ${result.toAccountNumber}.`,
+      type: 'wallet',
+    });
+
+    // Lookup userId người nhận rồi notify
+    this.walletRepository
+      .lookupAccount(result.toAccountNumber)
+      .then((receiver) => {
+        if (!receiver) return;
+        this.notificationService.send({
+          userId: receiver.userId,
+          title: 'Money received',
+          body: `You received ${amount.toLocaleString('vi-VN')} from account ${result.fromAccountNumber}.`,
+          type: 'wallet',
+        });
+      })
+      .catch(() => undefined);
+
+    return result;
   }
 
   async lookupAccount(accountNumber: string): Promise<AccountLookupResType> {

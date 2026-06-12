@@ -19,6 +19,7 @@ import {
   RefreshTokenResType,
   RegisterBodyType,
   RegisterResType,
+  UpdateProfileBodyType,
 } from './auth.model';
 import { AuthRepository } from './auth.repository';
 
@@ -121,6 +122,29 @@ export class AuthService {
       roleId: user.roleId,
       roleName: user.role.name,
     };
+  }
+
+  async updateProfile(userId: number, data: UpdateProfileBodyType): Promise<MeResType> {
+    try {
+      const user = await this.authRepository.updateProfile(userId, {
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        avatar: data.avatar,
+      });
+      return {
+        userId: user.id,
+        username: user.name,
+        email: user.email,
+        phone: user.phoneNumber,
+        address: user.address,
+        avatar: user.avatar,
+        roleId: user.roleId,
+        roleName: user.role.name,
+      };
+    } catch (error) {
+      handlePrismaError(error);
+    }
   }
 
   async loginWithValidatedUser({

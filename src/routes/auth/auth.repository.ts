@@ -36,6 +36,27 @@ export class AuthRepository {
     });
   }
 
+  updateProfile(
+    id: number,
+    data: { name?: string; phoneNumber?: string; address?: string | null; avatar?: string | null },
+  ) {
+    return this.prismaService.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phoneNumber: true,
+        address: true,
+        avatar: true,
+        status: true,
+        roleId: true,
+        role: { select: { id: true, name: true } },
+      },
+    });
+  }
+
   createUser({
     email,
     name,

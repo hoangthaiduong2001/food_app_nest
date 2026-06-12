@@ -52,6 +52,7 @@ export const UpdateProductBodySchema = CreateProductBodySchema.omit({
 export const ProductResSchema = z.object({
   id: z.number(),
   name: z.string(),
+  description: z.string().nullable(),
   basePrice: z.number(),
   virtualPrice: z.number(),
   totalStock: z.number(),

@@ -219,6 +219,14 @@ export class OrderService {
       },
     });
 
+    // 5b. WebSocket notification — đặt hàng thành công
+    this.notificationService.send({
+      userId,
+      title: 'Đặt hàng thành công',
+      body: `Đơn hàng #${result.id} đã được tạo. Chúng tôi sẽ xác nhận sớm nhất có thể.`,
+      type: 'order',
+    });
+
     // 6. Gửi email xác nhận — fire-and-forget, không block response
     this.prismaService.user
       .findUnique({
@@ -265,13 +273,35 @@ export class OrderService {
     return this.toOrderResponse(order);
   }
 
-  list(query: ListOrderQueryType, user: { userId: number; roleName: string }) {
-    return this.orderRepository.list({
-      userId: user.roleName === RoleName.Admin ? undefined : user.userId,
+  async list(
+    query: ListOrderQueryType,
+    user: { userId: number; roleName: string },
+  ) {
+    const isAdmin = user.roleName === RoleName.Admin;
+    const result = await this.orderRepository.list({
+      userId: isAdmin ? query.userId : user.userId,
       status: query.status,
+      search: isAdmin ? query.search : undefined,
+      dateFrom: isAdmin && query.dateFrom ? new Date(query.dateFrom) : undefined,
+      dateTo: isAdmin && query.dateTo ? new Date(query.dateTo + 'T23:59:59.999Z') : undefined,
       limit: query.limit,
       cursor: query.cursor,
     });
+
+    return {
+      ...result,
+      data: result.data.map((o) => ({
+        ...o,
+        shippingFee: Number(o.shippingFee),
+        totalAmount: Number(o.totalAmount),
+        finalAmount: Number(o.finalAmount),
+        receiver: o.receiver as { name: string; phone: string; address: string },
+        user: o.createdBy
+          ? { id: o.createdBy.id, name: o.createdBy.name, email: o.createdBy.email }
+          : undefined,
+        createdAt: o.createdAt.toISOString(),
+      })),
+    };
   }
 
   /**

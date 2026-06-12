@@ -118,19 +118,47 @@ export class OrderRepository {
   async list({
     userId,
     status,
+    search,
+    dateFrom,
+    dateTo,
     limit,
     cursor,
   }: {
     userId?: number;
     status?: OrderStatusType;
+    search?: string;
+    dateFrom?: Date;
+    dateTo?: Date;
     limit: number;
     cursor?: number;
   }) {
-    const where = {
-      deletedAt: null,
-      ...(userId ? { userId } : {}),
-      ...(status ? { status } : {}),
-    };
+    const where: Record<string, unknown> = { deletedAt: null };
+
+    if (userId) where['userId'] = userId;
+    if (status) where['status'] = status;
+
+    if (dateFrom || dateTo) {
+      where['createdAt'] = {
+        ...(dateFrom ? { gte: dateFrom } : {}),
+        ...(dateTo ? { lte: dateTo } : {}),
+      };
+    }
+
+    // search theo tên hoặc phone người nhận (JSON field)
+    if (search) {
+      where['OR'] = [
+        { receiver: { path: ['name'], string_contains: search } },
+        { receiver: { path: ['phone'], string_contains: search } },
+        {
+          createdBy: {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          },
+        },
+      ];
+    }
 
     const rows = await this.prismaService.order.findMany({
       where,
@@ -146,7 +174,9 @@ export class OrderRepository {
         shippingFee: true,
         totalAmount: true,
         finalAmount: true,
+        receiver: true,
         createdAt: true,
+        createdBy: { select: { id: true, name: true, email: true } },
       },
     });
 

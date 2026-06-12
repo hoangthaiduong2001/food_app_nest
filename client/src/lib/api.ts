@@ -1,0 +1,79 @@
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { useAuthStore } from '@/stores/auth.store'
+
+export const api = axios.create({
+  baseURL: '/api',
+  timeout: 15000,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = useAuthStore.getState().accessToken
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+let isRefreshing = false
+let refreshQueue: Array<(token: string) => void> = []
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error: AxiosError) => {
+    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+    if (error.response?.status !== 401 || original._retry) {
+      return Promise.reject(error)
+    }
+
+    original._retry = true
+
+    if (isRefreshing) {
+      return new Promise((resolve) => {
+        refreshQueue.push((token) => {
+          original.headers.Authorization = `Bearer ${token}`
+          resolve(api(original))
+        })
+      })
+    }
+
+    isRefreshing = true
+
+    try {
+      const refreshToken = useAuthStore.getState().refreshToken
+      const { data } = await axios.post('/api/auth/refresh', { refreshToken })
+      const newToken: string = data.data.accessToken
+
+      useAuthStore.getState().setTokens(newToken, data.data.refreshToken)
+      refreshQueue.forEach((cb) => cb(newToken))
+      refreshQueue = []
+
+      original.headers.Authorization = `Bearer ${newToken}`
+      return api(original)
+    } catch {
+      useAuthStore.getState().logout()
+      return Promise.reject(error)
+    } finally {
+      isRefreshing = false
+    }
+  },
+)
+
+export type ApiResponse<T> = {
+  data: T
+  message?: string
+}
+
+export type PaginatedResponse<T> = ApiResponse<{
+  data: T[]
+  nextCursor: number | null
+  hasMore: boolean
+}>
+
+export function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    return error.response?.data?.message ?? error.message
+  }
+  return 'An error occurred'
+}

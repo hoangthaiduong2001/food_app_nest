@@ -24,5 +24,9 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
+  },
+  "exclude": ["node_modules", "dist", "client", "test", "scripts"],
+  "watchOptions": {
+    "excludeDirectories": ["node_modules", "dist", "client"]
   }
 }

@@ -30,6 +30,7 @@ const productInclude = {
 type RawProduct = {
   id: number;
   name: string;
+  description: string | null;
   basePrice: number;
   virtualPrice: number;
   isActive: boolean;
@@ -61,6 +62,7 @@ export class PrismaProductRepository implements IProductRepository {
     return {
       id: p.id,
       name: p.name,
+      description: p.description,
       basePrice: p.basePrice,
       virtualPrice: p.virtualPrice,
       totalStock,
@@ -114,6 +116,7 @@ export class PrismaProductRepository implements IProductRepository {
       select: {
         id: true,
         name: true,
+        description: true,
         basePrice: true,
         virtualPrice: true,
         isActive: true,
@@ -138,6 +141,7 @@ export class PrismaProductRepository implements IProductRepository {
       data: page.map((p) => ({
         id: p.id,
         name: p.name,
+        description: p.description,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
         totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0),
@@ -172,6 +176,7 @@ export class PrismaProductRepository implements IProductRepository {
       Array<{
         id: number;
         name: string;
+        description: string | null;
         basePrice: number;
         virtualPrice: number;
         totalStock: bigint;
@@ -186,7 +191,7 @@ export class PrismaProductRepository implements IProductRepository {
       }>
     >`
       SELECT
-        p.id, p.name, p."basePrice", p."virtualPrice",
+        p.id, p.name, p.description, p."basePrice", p."virtualPrice",
         p."isActive", p.slug, p."brandId", p.images,
         p."publishedAt", p."createdAt", p."updatedAt",
         COALESCE((
@@ -211,6 +216,7 @@ export class PrismaProductRepository implements IProductRepository {
       data: page.map((p) => ({
         id: p.id,
         name: p.name,
+        description: p.description,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
         totalStock: Number(p.totalStock),

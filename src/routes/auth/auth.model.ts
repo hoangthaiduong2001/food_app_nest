@@ -51,6 +51,19 @@ export const MeResSchema = z.object({
   roleName: z.string(),
 });
 
+export const UpdateProfileBodySchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    phoneNumber: z.string().min(10).max(15).optional(),
+    address: z.string().max(500).nullable().optional(),
+    avatar: z.string().max(1000).nullable().optional(),
+  })
+  .strict();
+
+export const UpdateProfileResSchema = MeResSchema;
+
+export type UpdateProfileBodyType = z.infer<typeof UpdateProfileBodySchema>;
+
 export const CreateApiKeyBodySchema = z
   .object({
     label: z.string().min(1).max(100),

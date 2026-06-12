@@ -15,6 +15,7 @@ import {
   Ip,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -38,6 +39,8 @@ import {
   RegisterBodyDto,
   RegisterResDto,
   RevokeApiKeyResDto,
+  UpdateProfileBodyDto,
+  UpdateProfileResDto,
 } from './auth.dto';
 import { AuthService, ValidatedUser } from './auth.service';
 
@@ -155,6 +158,22 @@ export class AuthController {
   @ZodSerializerDto(MeResDto)
   me(@CurrentUser() user: ActiveUserData) {
     return this.authService.getProfile(user.userId);
+  }
+
+  @Patch('me')
+  @AuthSwagger()
+  @ApiOperation({ summary: 'Update current user profile (name, phone, address, avatar)' })
+  @ApiSuccess(UpdateProfileResDto, { description: 'Profile updated successfully' })
+  @ApiError(400, 'Validation error', 'Invalid input')
+  @ApiError(401, 'Missing or invalid token', 'Unauthorized')
+  @ApiError(409, 'Phone already taken', 'Phone already exists')
+  @SuccessMessage('Profile updated successfully')
+  @ZodSerializerDto(UpdateProfileResDto)
+  updateProfile(
+    @CurrentUser() user: ActiveUserData,
+    @Body() body: UpdateProfileBodyDto,
+  ) {
+    return this.authService.updateProfile(user.userId, body);
   }
 
   @Post('api-keys')

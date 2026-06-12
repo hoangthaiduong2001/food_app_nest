@@ -123,6 +123,7 @@ export class WalletRepository {
       where: { accountNumber },
       select: {
         accountNumber: true,
+        userId: true,
         user: { select: { name: true } },
       },
     });

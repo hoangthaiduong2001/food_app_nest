@@ -1,4 +1,5 @@
 import { EmailModule } from '@/routes/email/email.module';
+import { NotificationModule } from '@/routes/notification/notification.module';
 import { Module } from '@nestjs/common';
 import { CurrencyConverterService } from './currency-converter.service';
 import { DepositRepository } from './deposit.repository';
@@ -11,7 +12,7 @@ import { WalletRepository } from './wallet.repository';
 import { WalletService } from './wallet.service';
 
 @Module({
-  imports: [EmailModule],
+  imports: [EmailModule, NotificationModule],
   controllers: [WalletController],
   providers: [
     WalletService,

@@ -7,7 +7,7 @@ import { HttpCacheInterceptor } from '@/shared/interceptor/http-cache.intercepto
 import { ApiError, ApiSuccess } from '@/shared/swagger/api-response.decorator';
 import { AuthSwagger } from '@/shared/swagger/auth-swagger.decorator';
 import type { ActiveUserData } from '@/shared/types/active-user.type';
-import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { CacheTTL } from '@nestjs/cache-manager';
 import {
   Body,
   Controller,
@@ -53,7 +53,6 @@ export class ProductController {
   @Public()
   @Get(':id')
   @UseInterceptors(HttpCacheInterceptor)
-  @CacheKey('product-detail')
   @CacheTTL(300_000)
   @ApiOperation({ summary: 'Get product detail (public)' })
   @ApiSuccess(ProductResDto, { description: 'OK' })
