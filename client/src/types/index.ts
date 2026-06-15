@@ -1,4 +1,5 @@
 export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED'
+export type SellerStatus = 'PENDING' | 'APPROVED' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED'
 export type OrderStatus =
   | 'PENDING_PAYMENT'
   | 'PENDING_PICKUP'
@@ -47,6 +48,36 @@ export interface UpdateProfilePayload {
   phoneNumber?: string
   address?: string | null
   avatar?: string | null
+}
+
+export interface SellerProfile {
+  id: number
+  userId: number
+  shopName: string
+  shopSlug: string
+  description: string | null
+  logo: string | null
+  email: string
+  phone: string
+  address: string
+  status: SellerStatus
+  commissionRate: number
+  apiKey?: string
+  secretKey?: string
+  approvedAt: string | null
+  activatedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RegisterSellerPayload {
+  shopName: string
+  shopSlug: string
+  description?: string | null
+  logo?: string | null
+  email: string
+  phone: string
+  address: string
 }
 
 export interface AdminUser {
@@ -103,23 +134,61 @@ export interface ProductVariant {
   isActive: boolean
 }
 
+export interface SellerBrief {
+  id: number
+  userId: number
+  shopName: string
+  shopSlug: string
+  logo: string | null
+  phone: string
+  address: string
+}
+
 export interface Product {
   id: number
   name: string
   description: string | null
+  sellerId: number | null
+  seller: SellerBrief | null
   basePrice: number
   virtualPrice: number
   totalStock: number
   isActive: boolean
-  slug?: string
+  slug: string | null
   brandId: number
   images: string[]
-  publishedAt?: string
+  publishedAt: string | null
   createdAt: string
   updatedAt: string
   categories: Category[]
   variants: ProductVariant[]
 }
+
+// List API omits full variants but includes categories
+export type ProductListItem = Omit<Product, 'variants'>
+
+export interface CreateProductPayload {
+  name: string
+  description?: string | null
+  basePrice: number
+  virtualPrice: number
+  stock?: number
+  isActive?: boolean
+  slug?: string | null
+  brandId: number
+  images?: string[]
+  categoryIds?: number[]
+  variants?: Array<{
+    sku: string
+    name?: string | null
+    price: number
+    stock?: number
+    isDefault?: boolean
+    isActive?: boolean
+  }>
+}
+
+export type UpdateProductPayload = Partial<Omit<CreateProductPayload, 'variants'>>
 
 export interface CartItem {
   variantId: number

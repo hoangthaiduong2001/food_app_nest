@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ShoppingCart, ArrowLeft, Minus, Plus, Package, Smartphone } from 'lucide-react'
+import { ShoppingCart, ArrowLeft, Minus, Plus, Package, MessageCircle, Phone, Store, ChevronRight, MapPin } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { productService } from '@/services/product.service'
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { formatCurrency } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/api'
+import { ChatDrawer } from '@/components/chat/ChatDrawer'
 import type { ProductVariant } from '@/types'
 
 export default function ProductDetailPage() {
@@ -25,6 +26,7 @@ export default function ProductDetailPage() {
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [activeImage, setActiveImage] = useState(0)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id],
@@ -181,6 +183,77 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Seller info card */}
+      {product.seller && (
+        <div className="mt-8 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-5 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Thông tin người bán</p>
+          </div>
+          <div className="flex items-center gap-4 p-5">
+            {/* Logo / avatar */}
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-orange-100">
+              {product.seller.logo
+                ? <img src={product.seller.logo} alt={product.seller.shopName} className="h-full w-full object-cover" />
+                : <Store className="h-7 w-7 text-orange-500" />
+              }
+            </div>
+
+            {/* Shop info */}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-bold text-gray-900">{product.seller.shopName}</p>
+              {product.seller.phone && (
+                <div className="mt-0.5 flex items-center gap-1 text-sm text-gray-500">
+                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  <span>{product.seller.phone}</span>
+                </div>
+              )}
+              {product.seller.address && (
+                <div className="mt-0.5 flex items-start gap-1 text-sm text-gray-500">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span className="line-clamp-2">{product.seller.address}</span>
+                </div>
+              )}
+              <button
+                onClick={() => navigate(`/products?sellerId=${product.seller!.id}&shop=${encodeURIComponent(product.seller!.shopName)}`)}
+                className="mt-1.5 flex items-center gap-0.5 text-xs font-medium text-orange-500 hover:text-orange-600"
+              >
+                Xem tất cả sản phẩm của shop <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+
+            {/* Chat button */}
+            <div className="flex flex-col items-end gap-2">
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setChatOpen(true)}
+                  className="flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 active:scale-95"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Chat ngay
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="flex items-center gap-1.5 rounded-full border border-orange-400 px-4 py-2 text-sm font-semibold text-orange-500 transition hover:bg-orange-50"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Đăng nhập để chat
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat drawer */}
+      {chatOpen && product.seller && (
+        <ChatDrawer
+          seller={product.seller}
+          productName={product.name}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
     </div>
   )
 }

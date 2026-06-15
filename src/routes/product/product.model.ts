@@ -30,11 +30,13 @@ export const VariantResSchema = z.object({
 export const CreateProductBodySchema = z
   .object({
     name: z.string().min(1).max(500),
+    description: z.string().nullable().optional(),
     basePrice: z.number().nonnegative(),
     virtualPrice: z.number().nonnegative(),
     stock: z.number().int().nonnegative().default(0),
     isActive: z.boolean().default(true),
     slug: z.string().min(1).max(600).nullable().optional(),
+    sellerId: z.number().int().positive().nullable().optional(),
     brandId: z.number().int().positive(),
     images: z.array(z.string().url()).default([]),
     categoryIds: z.array(z.number().int().positive()).default([]),
@@ -49,10 +51,22 @@ export const UpdateProductBodySchema = CreateProductBodySchema.omit({
   .partial()
   .strict();
 
+export const SellerBriefSchema = z.object({
+  id: z.number(),
+  userId: z.number(),
+  shopName: z.string(),
+  shopSlug: z.string(),
+  logo: z.string().nullable(),
+  phone: z.string(),
+  address: z.string(),
+});
+
 export const ProductResSchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string().nullable(),
+  sellerId: z.number().nullable(),
+  seller: SellerBriefSchema.nullable(),
   basePrice: z.number(),
   virtualPrice: z.number(),
   totalStock: z.number(),
@@ -76,6 +90,7 @@ export const ListProductQuerySchema = z
   .object({
     brandId: z.coerce.number().int().positive().optional(),
     categoryId: z.coerce.number().int().positive().optional(),
+    sellerId: z.coerce.number().int().positive().optional(),
     q: z.string().trim().min(1).max(200).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     cursor: z.coerce.number().int().positive().optional(),

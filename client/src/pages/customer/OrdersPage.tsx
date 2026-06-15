@@ -96,7 +96,6 @@ export default function OrdersPage() {
         {t('orders.title')}
       </h1>
 
-      {/* Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav
           className="flex gap-1 overflow-x-auto overflow-y-hidden"

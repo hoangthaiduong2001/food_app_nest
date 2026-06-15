@@ -32,10 +32,35 @@ export interface DepositRejectedPayload {
   rejectReason?: string;
 }
 
+export interface SellerApprovedPayload {
+  to: string;
+  sellerName: string;
+  shopName: string;
+  commissionRate: number;
+  approvedAt: string;
+  activationToken: string;
+  activationExpiresAt: string;
+}
+
+export interface SellerRejectedPayload {
+  to: string;
+  sellerName: string;
+  shopName: string;
+  rejectedReason?: string;
+}
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly fromEmail = envConfig.SES_FROM_EMAIL;
+
+  // Retry tối đa 3 lần, backoff exponential: 30s → 60s → 120s
+  private readonly jobOpts = {
+    attempts: 3,
+    backoff: { type: 'exponential' as const, delay: 30_000 },
+    removeOnComplete: 100,
+    removeOnFail: 200,
+  };
 
   constructor(
     @InjectQueue(QueueName.EMAIL) private readonly emailQueue: Queue,
@@ -47,7 +72,7 @@ export class EmailService {
     await this.emailQueue.add(EmailJobName.ORDER_CONFIRMATION, {
       from: this.fromEmail,
       ...payload,
-    });
+    }, this.jobOpts);
     this.logger.log(
       `Queued order-confirmation email to ${payload.to} for order #${payload.orderId}`,
     );
@@ -57,7 +82,7 @@ export class EmailService {
     await this.emailQueue.add(EmailJobName.DEPOSIT_APPROVED, {
       from: this.fromEmail,
       ...payload,
-    });
+    }, this.jobOpts);
     this.logger.log(
       `Queued deposit-approved email to ${payload.to} for request #${payload.requestId}`,
     );
@@ -67,13 +92,29 @@ export class EmailService {
     await this.emailQueue.add(EmailJobName.DEPOSIT_REJECTED, {
       from: this.fromEmail,
       ...payload,
-    });
+    }, this.jobOpts);
     this.logger.log(
       `Queued deposit-rejected email to ${payload.to} for request #${payload.requestId}`,
     );
   }
 
+  async sendSellerApproved(payload: SellerApprovedPayload): Promise<void> {
+    await this.emailQueue.add(EmailJobName.SELLER_APPROVED, {
+      from: this.fromEmail,
+      ...payload,
+    }, this.jobOpts);
+    this.logger.log(`Queued seller-approved email to ${payload.to} for shop "${payload.shopName}"`);
+  }
+
+  async sendSellerRejected(payload: SellerRejectedPayload): Promise<void> {
+    await this.emailQueue.add(EmailJobName.SELLER_REJECTED, {
+      from: this.fromEmail,
+      ...payload,
+    }, this.jobOpts);
+    this.logger.log(`Queued seller-rejected email to ${payload.to} for shop "${payload.shopName}"`);
+  }
+
   async enqueue(jobName: string, data: Record<string, unknown>): Promise<void> {
-    await this.emailQueue.add(jobName, { from: this.fromEmail, ...data });
+    await this.emailQueue.add(jobName, { from: this.fromEmail, ...data }, this.jobOpts);
   }
 }

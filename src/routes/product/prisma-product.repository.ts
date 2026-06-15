@@ -10,8 +10,19 @@ import {
 } from './product.model';
 import { IProductRepository } from './product.repository.interface';
 
+const sellerSelect = {
+  id: true,
+  userId: true,
+  shopName: true,
+  shopSlug: true,
+  logo: true,
+  phone: true,
+  address: true,
+} as const;
+
 const productInclude = {
   categories: { select: { id: true, name: true } },
+  seller: { select: sellerSelect },
   variants: {
     where: { deletedAt: null },
     select: {
@@ -27,10 +38,22 @@ const productInclude = {
   },
 } as const;
 
+type RawSeller = {
+  id: number;
+  userId: number;
+  shopName: string;
+  shopSlug: string;
+  logo: string | null;
+  phone: string;
+  address: string;
+};
+
 type RawProduct = {
   id: number;
   name: string;
   description: string | null;
+  sellerId: number | null;
+  seller: RawSeller | null;
   basePrice: number;
   virtualPrice: number;
   isActive: boolean;
@@ -63,6 +86,8 @@ export class PrismaProductRepository implements IProductRepository {
       id: p.id,
       name: p.name,
       description: p.description,
+      sellerId: p.sellerId,
+      seller: p.seller ?? null,
       basePrice: p.basePrice,
       virtualPrice: p.virtualPrice,
       totalStock,
@@ -96,7 +121,7 @@ export class PrismaProductRepository implements IProductRepository {
   }
 
   async list(query: ListProductQueryType) {
-    const { limit, cursor, brandId, categoryId, q } = query;
+    const { limit, cursor, brandId, categoryId, sellerId, q } = query;
 
     if (q) {
       return this.search(q, query);
@@ -106,6 +131,7 @@ export class PrismaProductRepository implements IProductRepository {
       deletedAt: null,
       ...(brandId ? { brandId } : {}),
       ...(categoryId ? { categories: { some: { id: categoryId } } } : {}),
+      ...(sellerId ? { sellerId } : {}),
     };
 
     const rows = await this.prismaService.product.findMany({
@@ -117,6 +143,7 @@ export class PrismaProductRepository implements IProductRepository {
         id: true,
         name: true,
         description: true,
+        sellerId: true,
         basePrice: true,
         virtualPrice: true,
         isActive: true,
@@ -130,6 +157,7 @@ export class PrismaProductRepository implements IProductRepository {
           where: { deletedAt: null },
           select: { stock: true },
         },
+        categories: { select: { id: true, name: true } },
       },
     });
 
@@ -142,6 +170,8 @@ export class PrismaProductRepository implements IProductRepository {
         id: p.id,
         name: p.name,
         description: p.description,
+        sellerId: p.sellerId,
+        seller: null,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
         totalStock: p.variants.reduce((sum, v) => sum + v.stock, 0),
@@ -152,6 +182,7 @@ export class PrismaProductRepository implements IProductRepository {
         publishedAt: toISO(p.publishedAt),
         createdAt: toISO(p.createdAt),
         updatedAt: toISO(p.updatedAt),
+        categories: p.categories,
       })),
       nextCursor,
       hasMore,
@@ -177,6 +208,7 @@ export class PrismaProductRepository implements IProductRepository {
         id: number;
         name: string;
         description: string | null;
+        sellerId: number | null;
         basePrice: number;
         virtualPrice: number;
         totalStock: bigint;
@@ -191,7 +223,7 @@ export class PrismaProductRepository implements IProductRepository {
       }>
     >`
       SELECT
-        p.id, p.name, p.description, p."basePrice", p."virtualPrice",
+        p.id, p.name, p.description, p."sellerId", p."basePrice", p."virtualPrice",
         p."isActive", p.slug, p."brandId", p.images,
         p."publishedAt", p."createdAt", p."updatedAt",
         COALESCE((
@@ -217,6 +249,8 @@ export class PrismaProductRepository implements IProductRepository {
         id: p.id,
         name: p.name,
         description: p.description,
+        sellerId: p.sellerId,
+        seller: null,
         basePrice: p.basePrice,
         virtualPrice: p.virtualPrice,
         totalStock: Number(p.totalStock),
@@ -234,12 +268,13 @@ export class PrismaProductRepository implements IProductRepository {
   }
 
   async create(
-    data: CreateProductBodyType & { createdById: number },
+    data: CreateProductBodyType & { createdById: number; sellerId?: number | null },
   ): Promise<ProductResType> {
     const product = await this.prismaService.$transaction(async (tx) => {
       return tx.product.create({
         data: {
           name: data.name,
+          description: data.description ?? null,
           basePrice: data.basePrice,
           virtualPrice: data.virtualPrice,
           stock: data.stock,
@@ -249,6 +284,7 @@ export class PrismaProductRepository implements IProductRepository {
           images: data.images,
           createdBy: { connect: { id: data.createdById } },
           publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
+          ...(data.sellerId ? { seller: { connect: { id: data.sellerId } } } : {}),
           categories: data.categoryIds.length
             ? { connect: data.categoryIds.map((id) => ({ id })) }
             : undefined,

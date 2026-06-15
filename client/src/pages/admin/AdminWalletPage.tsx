@@ -19,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/api'
 import { useCursorPagination } from '@/hooks/useCursorPagination'
-import type { DepositRequestStatus, Currency } from '@/types'
+import type { Currency } from '@/types'
 
 const rejectSchema = z.object({
   rejectReason: z.string().min(3, 'Reason is too short'),
@@ -34,15 +34,6 @@ const rateSchema = z.object({
 type RateForm = z.infer<typeof rateSchema>
 
 const CURRENCIES: Currency[] = ['VND', 'USD', 'GBP', 'JPY', 'KRW', 'CNY']
-
-type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'destructive' | 'outline'
-
-const STATUS_VARIANTS: Record<DepositRequestStatus, BadgeVariant> = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'destructive',
-  CANCELLED: 'outline',
-}
 
 type Tab = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
 

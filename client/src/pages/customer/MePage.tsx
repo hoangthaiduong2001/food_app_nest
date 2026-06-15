@@ -60,18 +60,7 @@ export default function MePage() {
     onSuccess: (updated) => {
       toast.success(t('me.updateSuccess'))
       qc.invalidateQueries({ queryKey: ['me'] })
-      // Sync lại auth store để Navbar hiện tên mới
-      setUser({
-        id: updated.userId,
-        email: updated.email,
-        name: updated.username,
-        phone: updated.phone,
-        address: updated.address ?? undefined,
-        avatar: updated.avatar ?? undefined,
-        status: 'ACTIVE',
-        roleId: updated.roleId,
-        roleName: updated.roleName,
-      })
+      setUser(updated)
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })

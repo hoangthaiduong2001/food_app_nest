@@ -44,7 +44,6 @@ export default function CheckoutPage() {
   const checkout = useMutation({
     mutationFn: (values: FormValues) =>
       orderService.checkout({
-        items: [],
         variantIds: selectedVariantIds,
         receiver: { name: values.name, phone: values.phone, address: values.address },
         paymentMethod: values.paymentMethod as PaymentMethod,

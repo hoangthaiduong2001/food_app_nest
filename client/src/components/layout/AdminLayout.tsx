@@ -9,6 +9,7 @@ import {
   Wallet,
   LogOut,
   Smartphone,
+  Store,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth.store'
@@ -41,6 +42,7 @@ export function AdminLayout() {
     { to: '/admin/brands', label: t('admin.brands'), icon: Tag },
     { to: '/admin/orders', label: t('admin.orders'), icon: ShoppingCart },
     { to: '/admin/users', label: t('admin.users'), icon: Users },
+    { to: '/admin/sellers', label: t('admin.sellers'), icon: Store },
     { to: '/admin/wallet', label: t('admin.wallet'), icon: Wallet },
   ]
 
@@ -82,10 +84,10 @@ export function AdminLayout() {
         <div className="border-t border-gray-700 p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
-              {user?.name?.[0]?.toUpperCase()}
+              {user?.username?.[0]?.toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-white">{user?.name}</p>
+              <p className="truncate text-sm font-medium text-white">{user?.username}</p>
               <p className="truncate text-xs text-gray-400">{user?.email}</p>
             </div>
             <LangSwitcher />

@@ -1,9 +1,10 @@
 import { api } from '@/lib/api'
-import type { Product, PaginationMeta } from '@/types'
+import type { Product, ProductListItem, PaginationMeta } from '@/types'
 
 export interface ProductFilters {
   brandId?: number
   categoryId?: number
+  sellerId?: number
   q?: string
   limit?: number
   cursor?: number
@@ -26,7 +27,7 @@ export interface CreateProductPayload {
 export const productService = {
   list: (filters: ProductFilters = {}) =>
     api
-      .get<{ data: { data: Product[]; nextCursor: number | null; hasMore: boolean } & PaginationMeta }>(
+      .get<{ data: { data: ProductListItem[]; nextCursor: number | null; hasMore: boolean } & PaginationMeta }>(
         '/products',
         { params: filters },
       )

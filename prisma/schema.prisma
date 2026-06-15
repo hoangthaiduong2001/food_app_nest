@@ -57,7 +57,8 @@ model User {
   sentMessages                Message[]             @relation("FromUser")
   receivedMessages            Message[]             @relation("ToUser")
   createdOrders               Order[]               @relation("OrderCreatedBy")
-  soldOrders                  Order[]               @relation("Shop")
+  seller                      Seller?               @relation("SellerUser")
+  approvedSellers             Seller[]              @relation("SellerApprovedBy")
   updatedOrders               Order[]               @relation("OrderUpdatedBy")
   orders                      Order[]
   createdPermissions          Permission[]          @relation("PermissionCreatedBy")
@@ -261,6 +262,7 @@ model Product {
   name                String                   @db.VarChar(500)
   basePrice           Float
   virtualPrice        Float
+  sellerId            Int?
   brandId             Int
   images              String[]
   publishedAt         DateTime?
@@ -277,6 +279,7 @@ model Product {
   cartItems           CartItem[]
   orderItems          OrderItem[]
   brand               Brand                    @relation(fields: [brandId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  seller              Seller?                  @relation(fields: [sellerId], references: [id], onUpdate: NoAction)
   createdBy           User                     @relation("ProductCreatedBy", fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
   updatedBy           User?                    @relation("ProductUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
   productTranslations ProductTranslation[]
@@ -346,6 +349,7 @@ model Category {
   updatedBy            User?                 @relation("CategoryUpdatedBy", fields: [updatedById], references: [id], onUpdate: SetNull)
   categoryTranslations CategoryTranslation[]
   products             Product[]             @relation("CategoryToProduct")
+  sellers              Seller[]
 
   @@index([deletedAt])
 }
@@ -382,6 +386,7 @@ model Brand {
   updatedBy         User?              @relation("BrandUpdatedBy", fields: [updatedById], references: [id], onUpdate: SetNull)
   brandTranslations BrandTranslation[]
   products          Product[]
+  sellers           Seller[]
 
   @@index([deletedAt])
 }
@@ -430,7 +435,7 @@ model Order {
   status              OrderStatus
   /// [Receiver]
   receiver            Json
-  shopId              Int?
+  sellerId            Int?
   createdById         Int?
   updatedById         Int?
   deletedAt           DateTime?
@@ -443,8 +448,10 @@ model Order {
   paymentStatus       PaymentStatus        @default(PENDING)
   shippingFee         Int                  @default(0)
   totalAmount         Int                  @default(0)
+  settledAt           DateTime?
+  sellerAmount        Int                  @default(0)
   createdBy           User?                @relation("OrderCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
-  shop                User?                @relation("Shop", fields: [shopId], references: [id], onUpdate: NoAction)
+  seller              Seller?              @relation(fields: [sellerId], references: [id], onUpdate: NoAction)
   updatedBy           User?                @relation("OrderUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
   user                User                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   items               OrderItem[]
@@ -454,6 +461,8 @@ model Order {
   @@index([deletedAt])
   @@index([status, deletedAt])
   @@index([userId, status, createdAt])
+  @@index([sellerId, status])
+  @@index([settledAt])
 }
 
 model OrderItem {
@@ -551,6 +560,110 @@ model Device {
   isActive      Boolean        @default(true)
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[]
+}
+
+model Seller {
+  id             Int            @id @default(autoincrement())
+  userId         Int            @unique
+  shopName       String         @db.VarChar(500)
+  shopSlug       String         @unique @db.VarChar(600)
+  description    String?        @db.Text
+  logo           String?        @db.VarChar(1000)
+  email          String         @db.VarChar(255)
+  phone          String         @db.VarChar(50)
+  address        String         @db.VarChar(500)
+  status         SellerStatus   @default(PENDING)
+  commissionRate Decimal        @default(10) @db.Decimal(5, 2)
+  apiKey              String         @unique @db.VarChar(64)
+  secretKeyHash       String         @db.VarChar(255)
+  activationToken     String?        @unique @db.VarChar(64)
+  activationExpiresAt DateTime?
+  approvedById        Int?
+  approvedAt          DateTime?
+  activatedAt         DateTime?
+  rejectedReason      String?        @db.VarChar(500)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation("SellerUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy     User?          @relation("SellerApprovedBy", fields: [approvedById], references: [id], onUpdate: NoAction)
+  products       Product[]
+  orders         Order[]
+  settlements    Settlement[]
+  wallet         SellerWallet?
+  categories     Category[]
+  brands         Brand[]
+
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model SellerWallet {
+  id           Int                    @id @default(autoincrement())
+  sellerId     Int                    @unique
+  balance      BigInt                 @default(0)
+  currency     Currency               @default(VND)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  seller       Seller                 @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  transactions SellerWalletTx[]
+}
+
+model SellerWalletTx {
+  id            Int              @id @default(autoincrement())
+  walletId      Int
+  type          SellerTxType
+  amount        BigInt
+  balanceBefore BigInt
+  balanceAfter  BigInt
+  settlementId  Int?
+  description   String?          @db.VarChar(255)
+  createdAt     DateTime         @default(now())
+  wallet        SellerWallet     @relation(fields: [walletId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  settlement    Settlement?      @relation(fields: [settlementId], references: [id], onUpdate: NoAction)
+
+  @@index([walletId])
+  @@index([settlementId])
+}
+
+model Settlement {
+  id             Int              @id @default(autoincrement())
+  sellerId       Int
+  periodFrom     DateTime
+  periodTo       DateTime
+  orderCount     Int
+  grossAmount    BigInt
+  commissionAmt  BigInt
+  netAmount      BigInt
+  status         SettlementStatus @default(PENDING)
+  processedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  seller         Seller           @relation(fields: [sellerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transactions   SellerWalletTx[]
+
+  @@index([sellerId, status])
+  @@index([periodFrom, periodTo])
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+enum SellerTxType {
+  SETTLEMENT
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSED
+  FAILED
 }
 
 enum Currency {

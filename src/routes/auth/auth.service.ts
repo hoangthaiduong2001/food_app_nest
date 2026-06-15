@@ -65,6 +65,33 @@ export class AuthService {
       });
     }
 
+    if (user.seller) {
+      if (user.seller.status === 'PENDING') {
+        throw new ForbiddenException({
+          message: 'Seller account is pending approval. Please wait for admin review.',
+          path: 'email',
+        });
+      }
+      if (user.seller.status === 'APPROVED') {
+        throw new ForbiddenException({
+          message: 'Seller account is approved but not yet activated. Please check your email for the activation token.',
+          path: 'email',
+        });
+      }
+      if (user.seller.status === 'REJECTED') {
+        throw new ForbiddenException({
+          message: 'Seller account has been rejected. Please contact support.',
+          path: 'email',
+        });
+      }
+      if (user.seller.status === 'SUSPENDED') {
+        throw new ForbiddenException({
+          message: 'Seller account has been suspended. Please contact support.',
+          path: 'email',
+        });
+      }
+    }
+
     return { id: user.id, roleId: user.roleId, roleName: user.role.name };
   }
 

@@ -24,8 +24,10 @@ import { NotificationModule } from './routes/notification/notification.module';
 import { OrderModule } from './routes/order/order.module';
 import { PaymentModule } from './routes/payment/payment.module';
 import { ProductModule } from './routes/product/product.module';
+import { ChatModule } from './routes/chat/chat.module';
 import { ReportModule } from './routes/report/report.module';
 import { UploadModule } from './routes/upload/upload.module';
+import { SellerModule } from './routes/seller/seller.module';
 import { UserModule } from './routes/user/user.module';
 import { WalletModule } from './routes/wallet/wallet.module';
 import envConfig from './shared/config';
@@ -119,6 +121,8 @@ import { ShareModule } from './shared/share.module';
     InventoryJobModule,
     ReportModule,
     HealthModule,
+    SellerModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

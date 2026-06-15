@@ -162,7 +162,7 @@ export class OrderService {
         price: true,
         name: true,
         attributes: true,
-        product: { select: { id: true, name: true, images: true } },
+        product: { select: { id: true, name: true, images: true, sellerId: true } },
       },
     });
     const variantById = new Map(variants.map((v) => [v.id, v]));
@@ -191,9 +191,13 @@ export class OrderService {
       });
     }
 
+    // Lấy sellerId từ product (giả định tất cả items trong 1 order cùng 1 seller)
+    const sellerId = variants[0]?.product.sellerId ?? null;
+
     // 3. Tạo order + reserve stock (transaction)
     const order = await this.orderRepository.createOrderWithStock({
       userId,
+      sellerId,
       items,
       receiver: body.receiver as ReceiverType,
       paymentMethod: body.paymentMethod,
@@ -219,13 +223,36 @@ export class OrderService {
       },
     });
 
-    // 5b. WebSocket notification — đặt hàng thành công
+    // 5b. WebSocket notification — buyer
     this.notificationService.send({
       userId,
-      title: 'Đặt hàng thành công',
-      body: `Đơn hàng #${result.id} đã được tạo. Chúng tôi sẽ xác nhận sớm nhất có thể.`,
+      title: 'Dat hang thanh cong',
+      body: `Don hang #${result.id} da duoc tao. Chung toi se xac nhan som nhat co the.`,
       type: 'order',
     });
+
+    // 5c. Notify seller — fire-and-forget, không block response
+    if (sellerId) {
+      this.prismaService.seller
+        .findUnique({ where: { id: sellerId }, select: { userId: true } })
+        .then((seller) => {
+          if (!seller) return;
+          this.prismaService.user
+            .findUnique({ where: { id: userId }, select: { name: true } })
+            .then((buyer) => {
+              this.notificationService.notifySellerNewOrder({
+                sellerUserId: seller.userId,
+                orderId: result.id,
+                buyerName: buyer?.name ?? 'Khach hang',
+                itemCount: result.items.length,
+                finalAmount: result.finalAmount,
+              });
+            });
+        })
+        .catch((err: unknown) => {
+          this.logger.error('Failed to notify seller of new order', err);
+        });
+    }
 
     // 6. Gửi email xác nhận — fire-and-forget, không block response
     this.prismaService.user
@@ -273,6 +300,14 @@ export class OrderService {
     return this.toOrderResponse(order);
   }
 
+  async getOrderForSeller(orderId: number, sellerId: number) {
+    const order = await this.orderRepository.findByIdForSeller(orderId, sellerId);
+    if (!order) {
+      throw new NotFoundException({ message: 'Order not found', path: 'id' });
+    }
+    return this.toOrderResponse(order);
+  }
+
   async list(
     query: ListOrderQueryType,
     user: { userId: number; roleName: string },
@@ -290,18 +325,97 @@ export class OrderService {
 
     return {
       ...result,
-      data: result.data.map((o) => ({
-        ...o,
-        shippingFee: Number(o.shippingFee),
-        totalAmount: Number(o.totalAmount),
-        finalAmount: Number(o.finalAmount),
-        receiver: o.receiver as { name: string; phone: string; address: string },
-        user: o.createdBy
-          ? { id: o.createdBy.id, name: o.createdBy.name, email: o.createdBy.email }
-          : undefined,
-        createdAt: o.createdAt.toISOString(),
-      })),
+      data: result.data.map((o) => this.toOrderListItem(o)),
     };
+  }
+
+  async listForSeller(
+    sellerId: number,
+    query: ListOrderQueryType,
+  ) {
+    const result = await this.orderRepository.list({
+      sellerId,
+      status: query.status,
+      search: query.search,
+      dateFrom: query.dateFrom ? new Date(query.dateFrom) : undefined,
+      dateTo: query.dateTo ? new Date(query.dateTo + 'T23:59:59.999Z') : undefined,
+      limit: query.limit,
+      cursor: query.cursor,
+    });
+
+    return {
+      ...result,
+      data: result.data.map((o) => this.toOrderListItem(o)),
+    };
+  }
+
+  private toOrderListItem(o: {
+    shippingFee: number | bigint;
+    totalAmount: number | bigint;
+    finalAmount: number | bigint;
+    receiver: unknown;
+    createdAt: Date;
+    createdBy?: { id: number; name: string; email: string } | null;
+    [key: string]: unknown;
+  }) {
+    return {
+      ...o,
+      shippingFee: Number(o.shippingFee),
+      totalAmount: Number(o.totalAmount),
+      finalAmount: Number(o.finalAmount),
+      receiver: o.receiver as { name: string; phone: string; address: string },
+      user: o.createdBy
+        ? { id: o.createdBy.id, name: o.createdBy.name, email: o.createdBy.email }
+        : undefined,
+      createdAt: o.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * Seller chỉ được chuyển order của mình sang PENDING_DELIVERY hoặc DELIVERED.
+   * Các transition khác (cancel, return) thuộc về admin/user.
+   */
+  async updateStatusForSeller(
+    orderId: number,
+    sellerId: number,
+    newStatus: OrderStatusType,
+    sellerUserId: number,
+  ) {
+    const order = await this.orderRepository.findByIdForSeller(orderId, sellerId);
+    if (!order) {
+      throw new NotFoundException({ message: 'Order not found', path: 'id' });
+    }
+
+    const SELLER_ALLOWED: OrderStatusType[] = [
+      OrderStatus.PENDING_DELIVERY,
+      OrderStatus.DELIVERED,
+    ];
+    if (!SELLER_ALLOWED.includes(newStatus)) {
+      throw new ForbiddenException({
+        message: 'Seller can only set status to PENDING_DELIVERY or DELIVERED',
+      });
+    }
+
+    assertTransition(order.status as OrderStatusType, newStatus);
+
+    const updated = await this.orderRepository.updateStatusWithStock(
+      orderId,
+      newStatus,
+      sellerUserId, // User.id — dùng để connect updatedBy relation
+      order.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+    );
+
+    void this.pubSub.publish(PubSubEvent.ORDER_STATUS_CHANGED, {
+      orderStatusChanged: { id: orderId, status: newStatus, updatedAt: new Date() },
+    });
+
+    this.notificationService.notifyOrderStatusChanged({
+      userId: order.userId,
+      orderId,
+      status: newStatus,
+    });
+
+    return this.toOrderResponse(updated!);
   }
 
   /**

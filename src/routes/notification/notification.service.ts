@@ -61,4 +61,19 @@ export class NotificationService {
       type: 'order',
     });
   }
+
+  notifySellerNewOrder(params: {
+    sellerUserId: number;
+    orderId: number;
+    buyerName: string;
+    itemCount: number;
+    finalAmount: number;
+  }): void {
+    this.send({
+      userId: params.sellerUserId,
+      title: 'Đơn hàng mới',
+      body: `${params.buyerName} vừa đặt đơn #${params.orderId} — ${params.itemCount} sản phẩm, ${params.finalAmount.toLocaleString('vi-VN')}đ`,
+      type: 'order',
+    });
+  }
 }

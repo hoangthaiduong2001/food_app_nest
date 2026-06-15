@@ -59,6 +59,7 @@ export class UserRepository {
   }: GetUsersQueryType): Promise<{ data: CreateUserResType[]; total: number }> {
     const where = {
       deletedAt: null,
+      role: { is: { name: { not: 'ADMIN' } } },
       ...(search
         ? {
             OR: [

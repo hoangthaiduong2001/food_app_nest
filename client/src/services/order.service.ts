@@ -2,7 +2,6 @@ import { api } from '@/lib/api';
 import type { Order, OrderListItem, OrderStatus, PaymentMethod, ReceiverInfo } from '@/types';
 
 export interface CheckoutPayload {
-  items?: Array<{ variantId: number; quantity: number }>;
   variantIds?: number[];
   receiver: ReceiverInfo;
   paymentMethod: PaymentMethod;

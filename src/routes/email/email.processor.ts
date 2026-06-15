@@ -59,6 +59,12 @@ export class EmailProcessor extends WorkerHost {
         case EmailJobName.DEPOSIT_REJECTED:
           await this.sendDepositRejected(job.data);
           break;
+        case EmailJobName.SELLER_APPROVED:
+          await this.sendSellerApproved(job.data);
+          break;
+        case EmailJobName.SELLER_REJECTED:
+          await this.sendSellerRejected(job.data);
+          break;
         default:
           this.logger.warn(`Unknown email job: ${job.name}`);
       }
@@ -141,6 +147,26 @@ export class EmailProcessor extends WorkerHost {
       from: data.from as string,
       to: data.to as string,
       subject: `Deposit Request Rejected — #${data.requestId}`,
+      html,
+    });
+  }
+
+  private async sendSellerApproved(data: Record<string, unknown>): Promise<void> {
+    const html = renderTemplate('seller-approved', data);
+    await this.sendEmail({
+      from: data.from as string,
+      to: data.to as string,
+      subject: `Your seller account "${data.shopName}" has been approved!`,
+      html,
+    });
+  }
+
+  private async sendSellerRejected(data: Record<string, unknown>): Promise<void> {
+    const html = renderTemplate('seller-rejected', data);
+    await this.sendEmail({
+      from: data.from as string,
+      to: data.to as string,
+      subject: `Update on your seller application — ${data.shopName}`,
       html,
     });
   }

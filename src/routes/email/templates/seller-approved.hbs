@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Seller Account Approved</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2563eb; color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+    .content { border: 1px solid #eee; padding: 24px; }
+    .badge { display: inline-block; background: #dcfce7; color: #16a34a; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+    .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin: 16px 0; }
+    .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .label { color: #64748b; }
+    .value { font-weight: 600; }
+    .cta { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 16px; }
+    .footer { color: #999; font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 style="margin:0">🎉 Seller Account Approved!</h1>
+  </div>
+  <div class="content">
+    <p>Hi <strong>{{sellerName}}</strong>,</p>
+    <p>Great news! Your seller account for <strong>{{shopName}}</strong> has been approved.</p>
+    <span class="badge">✓ APPROVED</span>
+
+    <div class="info-box">
+      <div class="info-row">
+        <span class="label">Shop Name</span>
+        <span class="value">{{shopName}}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Commission Rate</span>
+        <span class="value">{{commissionRate}}%</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Approved At</span>
+        <span class="value">{{approvedAt}}</span>
+      </div>
+    </div>
+
+    <p><strong>Next step: Activate your account</strong></p>
+    <p>Use the token below to activate your seller account before it expires:</p>
+    <div class="info-box" style="word-break:break-all;">
+      <div class="info-row">
+        <span class="label">Activation Token</span>
+      </div>
+      <div style="font-family:monospace;font-size:13px;padding:8px 0;color:#1e40af;">{{activationToken}}</div>
+      <div class="info-row">
+        <span class="label">Expires At</span>
+        <span class="value">{{activationExpiresAt}}</span>
+      </div>
+    </div>
+    <p>Call this API to activate your account:</p>
+    <div class="info-box" style="font-family:monospace;font-size:13px;">
+      POST /sellers/activate<br/>
+      { "activationToken": "{{activationToken}}" }
+    </div>
+    <p style="color:#dc2626;font-size:13px;">⚠ Token expires in 48 hours. After activation, use your API Key and Secret Key to authenticate requests.</p>
+  </div>
+  <div class="footer">
+    <p>If you have any questions, please contact support.</p>
+  </div>
+</body>
+</html>

@@ -15,6 +15,7 @@ export class AuthRepository {
         status: true,
         roleId: true,
         role: { select: { id: true, name: true } },
+        seller: { select: { status: true } },
       },
     });
   }

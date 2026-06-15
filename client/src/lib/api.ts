@@ -73,7 +73,12 @@ export type PaginatedResponse<T> = ApiResponse<{
 
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message ?? error.message
+    const data = error.response?.data
+    // { error: { message } } — BE exception shape
+    if (typeof data?.error?.message === 'string') return data.error.message
+    // { message: string } — simple shape
+    if (typeof data?.message === 'string') return data.message
+    return error.message
   }
   return 'An error occurred'
 }

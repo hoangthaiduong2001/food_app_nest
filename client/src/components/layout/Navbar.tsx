@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Smartphone, ShoppingCart, User, LogOut, LayoutDashboard, Wallet } from 'lucide-react'
+import { ShoppingBag, ShoppingCart, User, LogOut, LayoutDashboard, Wallet } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth.store'
 import { useCartStore } from '@/stores/cart.store'
@@ -32,9 +32,9 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-gray-100 bg-white shadow-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-bold text-blue-600 text-xl">
-          <Smartphone className="h-6 w-6" />
-          TechStore
+        <Link to="/" className="flex items-center gap-2 font-bold text-orange-500 text-xl">
+          <ShoppingBag className="h-6 w-6" />
+          ShopVN
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
@@ -85,11 +85,11 @@ export function Navbar() {
                 title={t('me.title')}
               >
                 {user?.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="h-5 w-5 rounded-full object-cover" />
+                  <img src={user.avatar} alt={user.username} className="h-5 w-5 rounded-full object-cover" />
                 ) : (
                   <User className="h-4 w-4 text-blue-600" />
                 )}
-                <span className="max-w-24 truncate text-sm font-medium text-gray-700">{user?.name}</span>
+                <span className="max-w-24 truncate text-sm font-medium text-gray-700">{user?.username}</span>
               </button>
 
               <Button

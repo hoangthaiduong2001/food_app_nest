@@ -9,6 +9,8 @@ export const EmailJobName = {
   DEPOSIT_APPROVED: 'deposit-approved',
   DEPOSIT_REJECTED: 'deposit-rejected',
   WITHDRAW_APPROVED: 'withdraw-approved',
+  SELLER_APPROVED: 'seller-approved',
+  SELLER_REJECTED: 'seller-rejected',
 } as const;
 
 export const InventoryJobName = {

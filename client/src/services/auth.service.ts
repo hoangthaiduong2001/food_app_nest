@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { User, MeProfile, UpdateProfilePayload } from '@/types'
+import type { MeProfile, UpdateProfilePayload } from '@/types'
 
 export interface LoginPayload {
   email: string

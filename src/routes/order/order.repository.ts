@@ -28,12 +28,14 @@ export class OrderRepository {
 
   async createOrderWithStock({
     userId,
+    sellerId,
     items,
     receiver,
     paymentMethod,
     shippingFee,
   }: {
     userId: number;
+    sellerId: number | null;
     items: CheckoutItemInput[];
     receiver: ReceiverType;
     paymentMethod: string;
@@ -74,6 +76,7 @@ export class OrderRepository {
       const order = await tx.order.create({
         data: {
           userId,
+          ...(sellerId !== null ? { sellerId } : {}),
           status: OrderStatus.PENDING_PAYMENT,
           paymentMethod: paymentMethod as never,
           shippingFee,
@@ -115,8 +118,23 @@ export class OrderRepository {
     });
   }
 
+  findByIdForSeller(id: number, sellerId: number) {
+    return this.prismaService.order.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+        OR: [
+          { sellerId },
+          { items: { some: { product: { sellerId } } } },
+        ],
+      },
+      include: { items: true },
+    });
+  }
+
   async list({
     userId,
+    sellerId,
     status,
     search,
     dateFrom,
@@ -125,6 +143,7 @@ export class OrderRepository {
     cursor,
   }: {
     userId?: number;
+    sellerId?: number;
     status?: OrderStatusType;
     search?: string;
     dateFrom?: Date;
@@ -135,6 +154,12 @@ export class OrderRepository {
     const where: Record<string, unknown> = { deletedAt: null };
 
     if (userId) where['userId'] = userId;
+    if (sellerId) {
+      where['OR'] = [
+        { sellerId },
+        { items: { some: { product: { sellerId } } } },
+      ];
+    }
     if (status) where['status'] = status;
 
     if (dateFrom || dateTo) {
