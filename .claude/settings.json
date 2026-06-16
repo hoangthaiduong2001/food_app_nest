@@ -46,7 +46,8 @@
       "Bash(redis-server --version)",
       "Bash(brew services *)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest', {}\\), indent=2\\)\\)\")",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest',{}\\), indent=2\\)\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest',{}\\), indent=2\\)\\)\")",
+      "Bash(DATABASE_URL=\"postgresql://food_user:food_pass@localhost:5432/food_app_ci\" ACCESS_TOKEN_SECRET=\"ci-secret\" ACCESS_TOKEN_EXPIRES_IN=\"15m\" REFRESH_TOKEN_SECRET=\"ci-refresh\" REFRESH_TOKEN_EXPIRES_IN=\"7d\" NODE_ENV=\"test\" npx jest --coverage)"
     ],
     "additionalDirectories": [
       "/tmp"

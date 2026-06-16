@@ -1,3 +1,5 @@
 {
-  "cSpell.words": ["hgetall"]
+  "cSpell.words": ["hgetall"],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

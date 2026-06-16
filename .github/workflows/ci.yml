@@ -15,6 +15,13 @@ jobs:
   lint:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://food_user:food_pass@localhost:5432/food_app_ci
+      ACCESS_TOKEN_SECRET: ci-access-secret
+      ACCESS_TOKEN_EXPIRES_IN: 15m
+      REFRESH_TOKEN_SECRET: ci-refresh-secret
+      REFRESH_TOKEN_EXPIRES_IN: 7d
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +46,15 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://food_user:food_pass@localhost:5432/food_app_ci
+      ACCESS_TOKEN_SECRET: ci-access-secret
+      ACCESS_TOKEN_EXPIRES_IN: 15m
+      REFRESH_TOKEN_SECRET: ci-refresh-secret
+      REFRESH_TOKEN_EXPIRES_IN: 7d
+      NODE_ENV: test
+      CORS_ORIGINS: http://localhost:3000
+      SES_FROM_EMAIL: noreply@test.com
     steps:
       - uses: actions/checkout@v4
 
