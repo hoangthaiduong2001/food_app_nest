@@ -9,31 +9,31 @@ import {
 
 describe('OrderStateMachine', () => {
   describe('canTransition', () => {
-    it('cho phép PENDING_PAYMENT → PENDING_PICKUP', () => {
+    it('allows PENDING_PAYMENT → PENDING_PICKUP', () => {
       expect(
         canTransition(OrderStatus.PENDING_PAYMENT, OrderStatus.PENDING_PICKUP),
       ).toBe(true);
     });
 
-    it('cho phép PENDING_PAYMENT → CANCELLED', () => {
+    it('allows PENDING_PAYMENT → CANCELLED', () => {
       expect(
         canTransition(OrderStatus.PENDING_PAYMENT, OrderStatus.CANCELLED),
       ).toBe(true);
     });
 
-    it('CẤM nhảy cóc PENDING_PAYMENT → DELIVERED', () => {
+    it('blocks skipping PENDING_PAYMENT → DELIVERED', () => {
       expect(
         canTransition(OrderStatus.PENDING_PAYMENT, OrderStatus.DELIVERED),
       ).toBe(false);
     });
 
-    it('CẤM đi ngược DELIVERED → PENDING_PAYMENT', () => {
+    it('blocks going backwards DELIVERED → PENDING_PAYMENT', () => {
       expect(
         canTransition(OrderStatus.DELIVERED, OrderStatus.PENDING_PAYMENT),
       ).toBe(false);
     });
 
-    it('cho phép DELIVERED → RETURNED', () => {
+    it('allows DELIVERED → RETURNED', () => {
       expect(canTransition(OrderStatus.DELIVERED, OrderStatus.RETURNED)).toBe(
         true,
       );
@@ -41,25 +41,25 @@ describe('OrderStateMachine', () => {
   });
 
   describe('isTerminal', () => {
-    it('CANCELLED là terminal', () => {
+    it('CANCELLED is terminal', () => {
       expect(isTerminal(OrderStatus.CANCELLED)).toBe(true);
     });
-    it('RETURNED là terminal', () => {
+    it('RETURNED is terminal', () => {
       expect(isTerminal(OrderStatus.RETURNED)).toBe(true);
     });
-    it('PENDING_PAYMENT KHÔNG terminal', () => {
+    it('PENDING_PAYMENT is not terminal', () => {
       expect(isTerminal(OrderStatus.PENDING_PAYMENT)).toBe(false);
     });
   });
 
   describe('shouldReleaseStock', () => {
-    it('CANCELLED → hoàn kho', () => {
+    it('CANCELLED releases stock', () => {
       expect(shouldReleaseStock(OrderStatus.CANCELLED)).toBe(true);
     });
-    it('RETURNED → hoàn kho', () => {
+    it('RETURNED releases stock', () => {
       expect(shouldReleaseStock(OrderStatus.RETURNED)).toBe(true);
     });
-    it('DELIVERED → KHÔNG hoàn kho', () => {
+    it('DELIVERED does not release stock', () => {
       expect(shouldReleaseStock(OrderStatus.DELIVERED)).toBe(false);
     });
   });
@@ -77,7 +77,7 @@ describe('OrderStateMachine', () => {
   });
 
   describe('assertTransition', () => {
-    it('không throw khi hợp lệ', () => {
+    it('does not throw when transition is valid', () => {
       expect(() =>
         assertTransition(
           OrderStatus.PENDING_PAYMENT,
@@ -86,13 +86,13 @@ describe('OrderStateMachine', () => {
       ).not.toThrow();
     });
 
-    it('throw khi transition sai', () => {
+    it('throws when transition is invalid', () => {
       expect(() =>
         assertTransition(OrderStatus.DELIVERED, OrderStatus.PENDING_PAYMENT),
       ).toThrow();
     });
 
-    it('throw khi giữ nguyên status', () => {
+    it('throws when status stays the same', () => {
       expect(() =>
         assertTransition(OrderStatus.DELIVERED, OrderStatus.DELIVERED),
       ).toThrow();

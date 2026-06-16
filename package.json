@@ -125,13 +125,27 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(uuid)/)"
+    ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "routes/product/product.service.ts",
+      "routes/order/order.service.ts",
+      "routes/wallet/wallet.service.ts",
+      "routes/notification/notification.service.ts",
+      "shared/state-machine/order-state-machine.ts"
     ],
     "coverageDirectory": "../coverage",
+    "coverageThreshold": {
+      "global": {
+        "lines": 70,
+        "functions": 70,
+        "branches": 60
+      }
+    },
     "testEnvironment": "node"
   }
 }

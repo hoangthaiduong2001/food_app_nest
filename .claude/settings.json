@@ -42,7 +42,11 @@
       "Bash(kill -SIGUSR2 38283)",
       "Bash(kill 38283)",
       "Bash(curl -s \"http://localhost:3003/sellers/3/filters\")",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(c['name']\\) for c in d['data']['categories']]\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(c['name']\\) for c in d['data']['categories']]\")",
+      "Bash(redis-server --version)",
+      "Bash(brew services *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest', {}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest',{}\\), indent=2\\)\\)\")"
     ],
     "additionalDirectories": [
       "/tmp"

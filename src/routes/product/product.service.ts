@@ -5,6 +5,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import {
   CreateProductBodyType,
   ListProductQueryType,
@@ -18,6 +20,8 @@ export class ProductService {
   constructor(
     @Inject(PRODUCT_REPOSITORY)
     private readonly productRepository: IProductRepository,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   list(query: ListProductQueryType) {
@@ -50,10 +54,12 @@ export class ProductService {
     await this.validateRelations(data.brandId, data.categoryIds);
 
     try {
-      return await this.productRepository.update(id, {
+      const result = await this.productRepository.update(id, {
         ...data,
         updatedById: userId,
       });
+      await this.invalidateProductCache(id);
+      return result;
     } catch (error) {
       handlePrismaError(error);
     }
@@ -64,7 +70,13 @@ export class ProductService {
     if (result.count === 0) {
       throw new NotFoundException({ message: 'Product not found', path: 'id' });
     }
+    await this.invalidateProductCache(id);
     return { deleted: true };
+  }
+
+  private async invalidateProductCache(id: number): Promise<void> {
+    // Xóa cache detail của product này
+    await this.cacheManager.del(`/products/${id}`);
   }
 
   private async validateRelations(

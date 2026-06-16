@@ -1,20 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { IActivityLogService, LogActivityInput } from './activity-log.interface';
 import { ActivityLog, ActivityLogDocument } from './activity-log.schema';
 
-export interface LogActivityInput {
-  userId: number;
-  action: string;
-  resourceType: string;
-  resourceId: string;
-  metadata?: Record<string, unknown>;
-  ip?: string;
-  userAgent?: string;
-}
+export type { LogActivityInput };
 
 @Injectable()
-export class ActivityLogService {
+export class ActivityLogService implements IActivityLogService {
   private readonly logger = new Logger(ActivityLogService.name);
 
   constructor(

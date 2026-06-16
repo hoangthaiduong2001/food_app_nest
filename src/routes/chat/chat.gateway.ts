@@ -1,3 +1,4 @@
+import envConfig from '@/shared/config';
 import { TokenService } from '@/shared/services/token.service';
 import { Logger } from '@nestjs/common';
 import {
@@ -11,7 +12,10 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/chat' })
+@WebSocketGateway({
+  cors: { origin: envConfig!.CORS_ORIGINS.split(','), credentials: true },
+  namespace: '/chat',
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
@@ -85,8 +89,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  emitReadReceipt(readerId: number, senderId: number, readAt: string): void {
+    const room = this.roomKey(readerId, senderId);
+    this.server.to(room).emit('chat:read', { readerId, readAt });
+    this.server.to(`chat:${senderId}`).emit('chat:read', { readerId, readAt });
+  }
+
   private roomKey(a: number, b: number): string {
-    // Đảm bảo room key nhất quán bất kể ai gọi trước
     return `conversation:${Math.min(a, b)}:${Math.max(a, b)}`;
   }
 }

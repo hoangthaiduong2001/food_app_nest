@@ -88,6 +88,11 @@ export class ChatController {
       query.cursor,
     );
 
+    // Emit read receipt cho sender biết tin đã được đọc
+    if (result.readAt) {
+      this.chatGateway.emitReadReceipt(me.userId, query.withUserId, result.readAt);
+    }
+
     return {
       ...result,
       data: result.data.map((m) => ({

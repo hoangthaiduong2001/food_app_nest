@@ -1,3 +1,4 @@
+import envConfig from '@/shared/config';
 import { TokenService } from '@/shared/services/token.service';
 import { Logger } from '@nestjs/common';
 import {
@@ -10,15 +11,23 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { PrismaService } from '@/shared/services/prisma.service';
+import { RoleName } from '@/shared/constants/role.constant';
 
-@WebSocketGateway({ cors: { origin: '*' }, namespace: '/orders' })
+@WebSocketGateway({
+  cors: { origin: envConfig!.CORS_ORIGINS.split(','), credentials: true },
+  namespace: '/orders',
+})
 export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
   private readonly logger = new Logger(OrderGateway.name);
 
-  constructor(private readonly tokenService: TokenService) {}
+  constructor(
+    private readonly tokenService: TokenService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async handleConnection(client: Socket): Promise<void> {
     const token =
@@ -57,7 +66,20 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { orderId: number },
   ): Promise<void> {
     const userId = client.data?.userId as number | undefined;
+    const roleName = client.data?.roleName as string | undefined;
     if (!userId) return;
+
+    // Admin được xem mọi order; user thường chỉ được xem order của mình
+    if (roleName !== RoleName.Admin) {
+      const order = await this.prisma.order.findFirst({
+        where: { id: data.orderId, userId },
+        select: { id: true },
+      });
+      if (!order) {
+        client.emit('error', { message: 'Order not found or access denied' });
+        return;
+      }
+    }
 
     const room = `order:${data.orderId}`;
     await client.join(room);

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ActivityLog } from './activity-log.schema';
-import { LogActivityInput } from './activity-log.service';
+import { IActivityLogService, LogActivityInput } from './activity-log.interface';
 
 @Injectable()
-export class NoopActivityLogService {
+export class NoopActivityLogService implements IActivityLogService {
   log(_input: LogActivityInput): void {}
 
   findByUser(
