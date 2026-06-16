@@ -7,7 +7,7 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
-  // beforeAll thay vì beforeEach — khởi tạo 1 lần cho toàn suite, nhanh hơn nhiều
+  // beforeAll instead of beforeEach — initialize once for the whole suite
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
