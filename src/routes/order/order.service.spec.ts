@@ -230,7 +230,7 @@ describe('OrderService', () => {
       const order = buildOrderRaw({
         userId: 10,
         status: OrderStatus.PENDING_PICKUP,
-        items: [{ variantId: 5, quantity: 2 }],
+        items: [{ id: 1, orderId: 1, variantId: 5, productId: 2, quantity: 2, unitPrice: 100_000, totalPrice: 200_000, productName: 'Test', productImage: null, attributes: null }],
       });
       mockOrderRepo.findByIdForSeller.mockResolvedValue(order);
       mockOrderRepo.updateStatusWithStock.mockResolvedValue(

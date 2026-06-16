@@ -7,7 +7,8 @@ config({
   path: '.env',
 });
 
-if (!fs.existsSync(path.resolve('.env'))) {
+// CI/production inject env vars trực tiếp — không cần file .env
+if (!fs.existsSync(path.resolve('.env')) && process.env.NODE_ENV !== 'test' && process.env.CI !== 'true') {
   console.log('Not found .env file.');
   process.exit(1);
 }
