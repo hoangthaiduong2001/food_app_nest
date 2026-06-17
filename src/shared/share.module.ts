@@ -18,6 +18,7 @@ import { TokenBlacklistService } from './services/token-blacklist.service';
 import { TokenService } from './services/token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import envConfig from './config';
+import { buildRedisOptions } from './services/redis.service';
 
 @Global()
 @Module({
@@ -32,7 +33,7 @@ import envConfig from './config';
       }),
     }),
     BullModule.forRoot({
-      connection: { url: envConfig.REDIS_URL },
+      connection: buildRedisOptions(envConfig.REDIS_URL),
       defaultJobOptions: {
         attempts: 3,
         backoff: { type: 'exponential', delay: 1000 },
