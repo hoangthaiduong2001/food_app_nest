@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/api'
 import { useCursorPagination } from '@/hooks/useCursorPagination'
-import type { Product } from '@/types'
+import type { Product, ProductListItem } from '@/types'
 import { useDebounce } from '@/hooks/useDebounce'
 
 const schema = z.object({
@@ -99,7 +99,7 @@ export default function AdminProductsPage() {
     setIsOpen(true)
   }
 
-  function openEdit(p: Product) {
+  function openEdit(p: ProductListItem) {
     setEditProduct(p)
     reset({
       name: p.name,
