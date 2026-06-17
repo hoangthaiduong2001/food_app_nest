@@ -1,8 +1,7 @@
 import axios from 'axios'
 import { useSellerStore } from '@/stores/seller.store'
 
-// Đi qua Vite proxy /api → http://localhost:3003 (giống api.ts)
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 /**
  * Tính HMAC-SHA256 signature theo format BE yêu cầu:
