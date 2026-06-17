@@ -67,8 +67,30 @@ services:
       retries: 5
     restart: unless-stopped
 
+  localstack:
+    image: localstack/localstack:latest
+    container_name: food-app-localstack
+    ports:
+      - '4566:4566'   # Tất cả AWS services qua 1 port
+    environment:
+      - SERVICES=s3,ssm,secretsmanager,ecs,ecr,rds,elasticache,elbv2,iam,logs,cloudwatch,sns,ec2
+      - DEBUG=0
+      - AWS_DEFAULT_REGION=ap-southeast-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4566/_localstack/health']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   mongo-data:
   redis-data:
   minio-data:
+  localstack-data:

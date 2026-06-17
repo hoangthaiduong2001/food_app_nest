@@ -47,7 +47,26 @@
       "Bash(brew services *)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest', {}\\), indent=2\\)\\)\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('jest',{}\\), indent=2\\)\\)\")",
-      "Bash(DATABASE_URL=\"postgresql://food_user:food_pass@localhost:5432/food_app_ci\" ACCESS_TOKEN_SECRET=\"ci-secret\" ACCESS_TOKEN_EXPIRES_IN=\"15m\" REFRESH_TOKEN_SECRET=\"ci-refresh\" REFRESH_TOKEN_EXPIRES_IN=\"7d\" NODE_ENV=\"test\" npx jest --coverage)"
+      "Bash(DATABASE_URL=\"postgresql://food_user:food_pass@localhost:5432/food_app_ci\" ACCESS_TOKEN_SECRET=\"ci-secret\" ACCESS_TOKEN_EXPIRES_IN=\"15m\" REFRESH_TOKEN_SECRET=\"ci-refresh\" REFRESH_TOKEN_EXPIRES_IN=\"7d\" NODE_ENV=\"test\" npx jest --coverage)",
+      "Bash(terraform version *)",
+      "Bash(brew install *)",
+      "Bash(pip3 install *)",
+      "Bash(brew tap *)",
+      "Bash(curl -sLO https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_darwin_arm64.zip)",
+      "Bash(unzip -o terraform_1.9.8_darwin_arm64.zip)",
+      "Bash(sudo mv terraform /usr/local/bin/)",
+      "Bash(localstack --version)",
+      "Bash(awslocal --version)",
+      "Bash(find /Users/fe-duong/Library/Python -name \"tflocal\" 2>/dev/null && find /usr/local/bin -name \"tflocal\" 2>/dev/null)",
+      "Read(//usr/local/bin/**)",
+      "Bash(nc -zv harmless-hawk-149906.upstash.io 6380)",
+      "Bash(nc -zv harmless-hawk-149906.upstash.io 6379)",
+      "Bash(nc -zv harmless-hawk-149906.upstash.io 443)",
+      "Bash(kill %1)",
+      "Bash(gh pr create --title 'fix: prisma config JS + Redis TLS for production deploy' --body ' *)",
+      "Bash(curl -s -X POST -H 'Authorization: token __CMDSUB_OUTPUT__')",
+      "Bash(curl -sS https://webi.sh/gh)",
+      "Bash(sh)"
     ],
     "additionalDirectories": [
       "/tmp"
