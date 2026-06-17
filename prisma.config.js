@@ -1,6 +1,4 @@
-const { defineConfig } = require('prisma/config');
-
-module.exports = defineConfig({
+module.exports = {
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
@@ -8,4 +6,4 @@ module.exports = defineConfig({
   datasource: {
     url: process.env['DATABASE_URL'],
   },
-});
+};
