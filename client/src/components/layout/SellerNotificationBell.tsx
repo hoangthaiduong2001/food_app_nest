@@ -54,7 +54,6 @@ export function SellerNotificationBell() {
   }, [])
 
   const orderNotifs = notifications.filter((n) => n.type === 'order')
-  const unreadOrders = orderNotifs.filter((n) => !n.read).length
 
   return (
     <div className="relative" ref={ref}>

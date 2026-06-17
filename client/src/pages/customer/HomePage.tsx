@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Truck, ShieldCheck, Headphones, ChevronRight,
-  Tag, Zap, RefreshCw, Package,
+  Zap, RefreshCw, Package,
 } from 'lucide-react'
 import { productService } from '@/services/product.service'
 import { categoryService } from '@/services/category.service'

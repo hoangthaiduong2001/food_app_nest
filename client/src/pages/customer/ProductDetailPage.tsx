@@ -76,7 +76,7 @@ export default function ProductDetailPage() {
               <img src={product.images[activeImage]} alt={product.name} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center text-gray-300">
-                <Smartphone className="h-24 w-24" />
+                <Package className="h-24 w-24" />
               </div>
             )}
           </div>
