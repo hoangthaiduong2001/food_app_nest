@@ -53,7 +53,6 @@ export function SellerNotificationBell() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const orderNotifs = notifications.filter((n) => n.type === 'order')
 
   return (
     <div className="relative" ref={ref}>
