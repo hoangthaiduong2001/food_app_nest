@@ -5,7 +5,21 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import Redis from 'ioredis';
+import Redis, { type RedisOptions } from 'ioredis';
+
+export function buildRedisOptions(url: string): RedisOptions {
+  const parsed = new URL(url);
+  const isTls = parsed.protocol === 'rediss:';
+  const options: RedisOptions = {
+    host: parsed.hostname,
+    port: parseInt(parsed.port || (isTls ? '6380' : '6379'), 10),
+    password: parsed.password ? decodeURIComponent(parsed.password) : undefined,
+    tls: isTls ? {} : undefined,
+    maxRetriesPerRequest: null,
+  };
+  if (parsed.username) options.username = parsed.username;
+  return options;
+}
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
@@ -13,9 +27,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   public readonly client: Redis;
 
   constructor() {
-    this.client = new Redis(envConfig.REDIS_URL, {
-      maxRetriesPerRequest: null,
-    });
+    this.client = new Redis(buildRedisOptions(envConfig.REDIS_URL));
 
     this.client.on('connect', () => this.logger.log('Redis connected'));
     this.client.on('error', (err) =>
