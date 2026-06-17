@@ -34,8 +34,8 @@ function FilterContent({
   shopName, isLoadingFilters,
   onClose,
 }: {
-  categories: Category[]
-  brands: Brand[]
+  categories: Pick<Category, 'id' | 'name'>[]
+  brands: Pick<Brand, 'id' | 'name' | 'logo'>[]
   categoryId: number | undefined
   setCategoryId: (v: number | undefined) => void
   brandId: number | undefined
@@ -503,9 +503,7 @@ export default function ProductsPage() {
 /* ── Product cards ── */
 
 function GridCard({ product, onClick }: { product: ProductListItem; onClick: () => void }) {
-  const variants = product.variants ?? []
-  const defaultV = variants.find((v) => v.isDefault) ?? variants[0]
-  const price = defaultV?.price ?? product.basePrice
+  const price = product.basePrice
   const discount = getDiscount(price, product.virtualPrice)
   const isOutOfStock = product.totalStock === 0
 
@@ -552,9 +550,7 @@ function GridCard({ product, onClick }: { product: ProductListItem; onClick: () 
 }
 
 function ListCard({ product, onClick }: { product: ProductListItem; onClick: () => void }) {
-  const variants = product.variants ?? []
-  const defaultV = variants.find((v) => v.isDefault) ?? variants[0]
-  const price = defaultV?.price ?? product.basePrice
+  const price = product.basePrice
   const discount = getDiscount(price, product.virtualPrice)
   const isOutOfStock = product.totalStock === 0
 

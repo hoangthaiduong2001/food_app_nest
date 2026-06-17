@@ -46,7 +46,7 @@ export default function SellerProductsPage() {
   const debouncedSearch = useDebounce(search, 400)
   const pg = useCursorPagination(LIMIT)
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['seller-products', debouncedSearch, pg.cursor],
     queryFn: () => sellerProductService.list({ q: debouncedSearch || undefined, limit: LIMIT, cursor: pg.cursor }),
   })

@@ -61,7 +61,7 @@ export default function SellerOrdersPage() {
   const debouncedSearch = useDebounce(search, 400)
   const pg = useCursorPagination(LIMIT)
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['seller-orders', debouncedSearch, statusFilter, pg.cursor],
     queryFn: () =>
       sellerOrderService.list({

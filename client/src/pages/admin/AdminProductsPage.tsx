@@ -20,7 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/api'
 import { useCursorPagination } from '@/hooks/useCursorPagination'
-import type { Product, ProductListItem } from '@/types'
+import type { ProductListItem } from '@/types'
 import { useDebounce } from '@/hooks/useDebounce'
 
 const schema = z.object({
@@ -42,7 +42,7 @@ export default function AdminProductsPage() {
   const { t } = useTranslation()
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
-  const [editProduct, setEditProduct] = useState<Product | null>(null)
+  const [editProduct, setEditProduct] = useState<ProductListItem | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const debouncedSearch = useDebounce(search, 400)
   const pg = useCursorPagination(LIMIT)
