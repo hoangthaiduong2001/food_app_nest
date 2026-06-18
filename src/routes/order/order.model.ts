@@ -50,6 +50,8 @@ export const OrderResSchema = z.object({
   paymentMethod: z.string(),
   shippingFee: z.number(),
   totalAmount: z.number(),
+  vatRate: z.number().nonnegative().default(0),
+  vatAmount: z.number().int().nonnegative().default(0),
   finalAmount: z.number(),
   receiver: ReceiverSchema,
   items: z.array(OrderItemResSchema),

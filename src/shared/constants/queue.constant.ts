@@ -6,6 +6,7 @@ export const QueueName = {
 
 export const EmailJobName = {
   ORDER_CONFIRMATION: 'order-confirmation',
+  ORDER_INVOICE: 'order-invoice',
   DEPOSIT_APPROVED: 'deposit-approved',
   DEPOSIT_REJECTED: 'deposit-rejected',
   WITHDRAW_APPROVED: 'withdraw-approved',

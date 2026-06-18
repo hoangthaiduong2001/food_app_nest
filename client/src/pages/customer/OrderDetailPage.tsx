@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck, FileDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { orderService } from '@/services/order.service'
@@ -191,6 +191,12 @@ export default function OrderDetailPage() {
                   )}
                 </span>
               </div>
+              {order.vatAmount > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>VAT ({order.vatRate}%)</span>
+                  <span>{formatCurrency(order.vatAmount)}</span>
+                </div>
+              )}
               <div className="border-t border-gray-100 pt-2 flex justify-between font-bold text-base">
                 <span>{t('cart.total')}</span>
                 <span className="text-blue-600">{formatCurrency(order.finalAmount)}</span>
@@ -233,6 +239,29 @@ export default function OrderDetailPage() {
                 {t('orders.cancel')}
               </Button>
             </div>
+          )}
+
+          {order.status === 'DELIVERED' && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                try {
+                  const blob = await orderService.downloadInvoice(order.id)
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `invoice-order-${order.id}.pdf`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch {
+                  toast.error('Failed to download invoice')
+                }
+              }}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              Download Invoice
+            </Button>
           )}
         </div>
       </div>

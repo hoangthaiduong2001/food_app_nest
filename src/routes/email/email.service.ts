@@ -32,6 +32,26 @@ export interface DepositRejectedPayload {
   rejectReason?: string;
 }
 
+export interface OrderInvoicePayload {
+  to: string;
+  customerName: string;
+  orderId: number;
+  shopName: string;
+  deliveredAt: string;
+  items: {
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }[];
+  totalAmount: number;
+  shippingFee: number;
+  vatAmount: number;
+  vatRate: number;
+  finalAmount: number;
+  paymentMethod: string;
+}
+
 export interface SellerApprovedPayload {
   to: string;
   sellerName: string;
@@ -65,6 +85,14 @@ export class EmailService {
   constructor(
     @InjectQueue(QueueName.EMAIL) private readonly emailQueue: Queue,
   ) {}
+
+  async sendOrderInvoice(payload: OrderInvoicePayload): Promise<void> {
+    await this.emailQueue.add(EmailJobName.ORDER_INVOICE, {
+      from: this.fromEmail,
+      ...payload,
+    }, this.jobOpts);
+    this.logger.log(`Queued order-invoice email to ${payload.to} for order #${payload.orderId}`);
+  }
 
   async sendOrderConfirmation(
     payload: OrderConfirmationPayload,

@@ -26,6 +26,7 @@ import { PubSub } from 'graphql-subscriptions';
 import { ActivityLogService } from '../activity-log/activity-log.service';
 import { CartRepository } from '../cart/cart.repository';
 import { EmailService } from '../email/email.service';
+import { InvoicePdfService } from '../email/invoice-pdf.service';
 import { NotificationService } from '../notification/notification.service';
 import { WalletTransactionType } from '../wallet/wallet.model';
 import { WalletRepository } from '../wallet/wallet.repository';
@@ -50,6 +51,7 @@ export class OrderService {
     private readonly lockService: DistributedLockService,
     private readonly walletRepository: WalletRepository,
     private readonly emailService: EmailService,
+    private readonly invoicePdfService: InvoicePdfService,
     private readonly notificationService: NotificationService,
     private readonly activityLogService: ActivityLogService,
     @Inject(PUB_SUB) private readonly pubSub: PubSub,
@@ -191,8 +193,17 @@ export class OrderService {
       });
     }
 
-    // Lấy sellerId từ product (giả định tất cả items trong 1 order cùng 1 seller)
+    // Lấy sellerId + vatRate từ product (giả định tất cả items trong 1 order cùng 1 seller)
     const sellerId = variants[0]?.product.sellerId ?? null;
+
+    let vatRate = 0;
+    if (sellerId) {
+      const seller = await this.prismaService.seller.findUnique({
+        where: { id: sellerId },
+        select: { vatRate: true },
+      });
+      vatRate = Number(seller?.vatRate ?? 0);
+    }
 
     // 3. Tạo order + reserve stock (transaction)
     const order = await this.orderRepository.createOrderWithStock({
@@ -202,6 +213,7 @@ export class OrderService {
       receiver: body.receiver as ReceiverType,
       paymentMethod: body.paymentMethod,
       shippingFee: body.shippingFee,
+      vatRate,
     });
 
     // 4. Xoá item đã đặt khỏi cart
@@ -298,6 +310,43 @@ export class OrderService {
       throw new NotFoundException({ message: 'Order not found', path: 'id' });
     }
     return this.toOrderResponse(order);
+  }
+
+  async generateInvoicePdf(
+    orderId: number,
+    user: { userId: number; roleName: string },
+  ): Promise<Buffer> {
+    const order = await this.orderRepository.findByIdForInvoice(orderId);
+
+    if (!order) {
+      throw new NotFoundException({ message: 'Order not found', path: 'id' });
+    }
+    if (user.roleName !== RoleName.Admin && order.userId !== user.userId) {
+      throw new ForbiddenException({ message: 'Not your order' });
+    }
+    if (order.status !== OrderStatus.DELIVERED) {
+      throw new BadRequestException({ message: 'Invoice is only available for delivered orders' });
+    }
+
+    return this.invoicePdfService.generate({
+      orderId: order.id,
+      customerName: order.user?.name ?? 'Customer',
+      customerEmail: order.user?.email ?? '',
+      shopName: order.seller?.shopName ?? 'Shop',
+      deliveredAt: order.updatedAt.toLocaleDateString('vi-VN'),
+      items: order.items.map((i) => ({
+        productName: i.productName,
+        quantity: i.quantity,
+        unitPrice: Number(i.unitPrice),
+        totalPrice: Number(i.totalPrice),
+      })),
+      totalAmount: order.totalAmount,
+      shippingFee: order.shippingFee,
+      vatAmount: order.vatAmount,
+      vatRate: Number(order.seller?.vatRate ?? 0),
+      finalAmount: order.finalAmount,
+      paymentMethod: order.paymentMethod,
+    });
   }
 
   async getOrderForSeller(orderId: number, sellerId: number) {
@@ -401,9 +450,82 @@ export class OrderService {
     const updated = await this.orderRepository.updateStatusWithStock(
       orderId,
       newStatus,
-      sellerUserId, // User.id — dùng để connect updatedBy relation
+      sellerUserId,
       order.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
     );
+
+    // Cộng tiền vào SellerWallet ngay khi DELIVERED (real-time settlement)
+    if (
+      newStatus === OrderStatus.DELIVERED &&
+      order.paymentStatus === 'SUCCESS' &&
+      !order.settledAt &&
+      order.seller
+    ) {
+      const commissionRate = Number(order.seller.commissionRate);
+      const vatAmount = order.vatAmount;
+      const grossAmount = order.finalAmount - vatAmount; // trước VAT
+      const commissionAmt = Math.round(grossAmount * (commissionRate / 100));
+      const netAmount = grossAmount - commissionAmt;
+      const now = new Date();
+
+      try {
+        await this.prismaService.$transaction(async (tx) => {
+          const wallet = await tx.sellerWallet.upsert({
+            where: { sellerId: order.seller!.id },
+            create: { sellerId: order.seller!.id, balance: 0n },
+            update: {},
+          });
+
+          const newBalance = wallet.balance + BigInt(netAmount);
+
+          await tx.sellerWallet.update({
+            where: { sellerId: order.seller!.id },
+            data: { balance: newBalance },
+          });
+
+          await tx.sellerWalletTx.create({
+            data: {
+              walletId: wallet.id,
+              type: 'SETTLEMENT',
+              amount: BigInt(netAmount),
+              balanceBefore: wallet.balance,
+              balanceAfter: newBalance,
+              description: `Order #${orderId} delivered — gross=${grossAmount}, commission=${commissionAmt}, vat=${vatAmount}, net=${netAmount}`,
+            },
+          });
+
+          await tx.order.update({
+            where: { id: orderId },
+            data: { settledAt: now, sellerAmount: netAmount },
+          });
+        });
+      } catch (err) {
+        this.logger.error(`Failed to settle order #${orderId} to seller wallet`, err);
+      }
+
+      // Gửi invoice PDF qua email cho customer
+      if (order.user?.email) {
+        void this.emailService.sendOrderInvoice({
+          to: order.user.email,
+          customerName: order.user.name,
+          orderId,
+          shopName: order.seller.shopName ?? 'Shop',
+          deliveredAt: new Date().toLocaleDateString('vi-VN'),
+          items: order.items.map((i) => ({
+            productName: i.productName,
+            quantity: i.quantity,
+            unitPrice: Number(i.unitPrice),
+            totalPrice: Number(i.totalPrice),
+          })),
+          totalAmount: order.totalAmount,
+          shippingFee: order.shippingFee,
+          vatAmount: order.vatAmount,
+          vatRate: Number(order.seller.vatRate),
+          finalAmount: order.finalAmount,
+          paymentMethod: order.paymentMethod,
+        });
+      }
+    }
 
     void this.pubSub.publish(PubSubEvent.ORDER_STATUS_CHANGED, {
       orderStatusChanged: { id: orderId, status: newStatus, updatedAt: new Date() },
