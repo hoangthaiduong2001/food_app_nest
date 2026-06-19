@@ -10,6 +10,7 @@
     "node_modules/(?!(uuid)/)"
   ],
   "moduleNameMapper": {
-    "^@/(.*)$": "<rootDir>/../src/$1"
+    "^@/(.*)$": "<rootDir>/../src/$1",
+    "^puppeteer$": "<rootDir>/__mocks__/puppeteer.js"
   }
 }
