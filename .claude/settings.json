@@ -88,7 +88,8 @@
       "Bash(open /tmp/invoice-v3.pdf)",
       "Bash(curl -s \"http://localhost:3000/api/v1/products/1\")",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\([{'id':v['id'],'name':v['name'],'price':v['price']} for v in d['data']['variants']], indent=2\\)\\)\")",
-      "Bash(curl -s \"http://localhost:3000/api/v1/products/1\" -o /tmp/p1.json)"
+      "Bash(curl -s \"http://localhost:3000/api/v1/products/1\" -o /tmp/p1.json)",
+      "Bash(gh run *)"
     ],
     "additionalDirectories": [
       "/tmp",
