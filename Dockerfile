@@ -26,6 +26,17 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV CHROME_BIN=/usr/bin/chromium-browser
+
+# Cài Chromium từ Alpine package (không cần download qua puppeteer)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
 
 # Cài chỉ production deps
 COPY package*.json ./

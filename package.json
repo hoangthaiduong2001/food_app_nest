@@ -141,8 +141,7 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1",
       "^puppeteer$": "<rootDir>/__mocks__/puppeteer.js",
-      "^puppeteer-core$": "<rootDir>/__mocks__/puppeteer.js",
-      "^@sparticuz/chromium$": "<rootDir>/__mocks__/chromium.js"
+      "^puppeteer-core$": "<rootDir>/__mocks__/puppeteer.js"
     },
     "collectCoverageFrom": [
       "routes/product/product.service.ts",
