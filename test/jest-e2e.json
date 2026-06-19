@@ -11,6 +11,8 @@
   ],
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/../src/$1",
-    "^puppeteer$": "<rootDir>/__mocks__/puppeteer.js"
+    "^puppeteer$": "<rootDir>/__mocks__/puppeteer.js",
+    "^puppeteer-core$": "<rootDir>/__mocks__/puppeteer.js",
+    "^@sparticuz/chromium$": "<rootDir>/__mocks__/chromium.js"
   }
 }

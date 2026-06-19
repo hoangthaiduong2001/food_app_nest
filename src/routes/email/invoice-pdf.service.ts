@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import puppeteer from 'puppeteer';
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 
 export interface InvoiceData {
   orderId: number;
@@ -25,8 +26,9 @@ export interface InvoiceData {
 export class InvoicePdfService {
   async generate(data: InvoiceData): Promise<Buffer> {
     const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
     try {
