@@ -33,6 +33,7 @@ export class OrderRepository {
     receiver,
     paymentMethod,
     shippingFee,
+    vatRate = 0,
   }: {
     userId: number;
     sellerId: number | null;
@@ -40,6 +41,7 @@ export class OrderRepository {
     receiver: ReceiverType;
     paymentMethod: string;
     shippingFee: number;
+    vatRate?: number;
   }) {
     return this.prismaService.$transaction(async (tx) => {
       for (const item of items) {
@@ -71,7 +73,8 @@ export class OrderRepository {
         (sum, i) => sum + i.unitPrice * i.quantity,
         0,
       );
-      const finalAmount = totalAmount + shippingFee;
+      const vatAmount = Math.round(totalAmount * (vatRate / 100));
+      const finalAmount = totalAmount + shippingFee + vatAmount;
 
       const order = await tx.order.create({
         data: {
@@ -81,6 +84,7 @@ export class OrderRepository {
           paymentMethod: paymentMethod as never,
           shippingFee,
           totalAmount,
+          vatAmount,
           finalAmount,
           receiver: receiver as unknown as Prisma.InputJsonValue,
           createdById: userId,
@@ -118,6 +122,17 @@ export class OrderRepository {
     });
   }
 
+  findByIdForInvoice(id: number) {
+    return this.prismaService.order.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        items: true,
+        seller: { select: { id: true, shopName: true, vatRate: true, commissionRate: true } },
+        user: { select: { name: true, email: true } },
+      },
+    });
+  }
+
   findByIdForSeller(id: number, sellerId: number) {
     return this.prismaService.order.findFirst({
       where: {
@@ -128,7 +143,11 @@ export class OrderRepository {
           { items: { some: { product: { sellerId } } } },
         ],
       },
-      include: { items: true },
+      include: {
+        items: true,
+        seller: { select: { id: true, shopName: true, commissionRate: true, vatRate: true } },
+        user: { select: { name: true, email: true } },
+      },
     });
   }
 

@@ -6,7 +6,8 @@
     "deleteOutDir": true,
     "watchAssets": true,
     "assets": [
-      { "include": "routes/email/templates/**/*.hbs", "watchAssets": true }
+      { "include": "routes/email/templates/**/*.hbs", "watchAssets": true },
+      { "include": "assets/fonts/**/*.woff", "watchAssets": false }
     ],
     "tsConfigPath": "tsconfig.json"
   },

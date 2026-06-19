@@ -450,6 +450,7 @@ model Order {
   totalAmount         Int                  @default(0)
   settledAt           DateTime?
   sellerAmount        Int                  @default(0)
+  vatAmount           Int                  @default(0)
   createdBy           User?                @relation("OrderCreatedBy", fields: [createdById], references: [id], onUpdate: NoAction)
   seller              Seller?              @relation(fields: [sellerId], references: [id], onUpdate: NoAction)
   updatedBy           User?                @relation("OrderUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
@@ -574,6 +575,7 @@ model Seller {
   address        String         @db.VarChar(500)
   status         SellerStatus   @default(PENDING)
   commissionRate Decimal        @default(10) @db.Decimal(5, 2)
+  vatRate        Decimal        @default(10) @db.Decimal(5, 2)
   apiKey              String         @unique @db.VarChar(64)
   secretKeyHash       String         @db.VarChar(255)
   activationToken     String?        @unique @db.VarChar(64)

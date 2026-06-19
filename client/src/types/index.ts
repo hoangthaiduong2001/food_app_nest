@@ -236,6 +236,8 @@ export interface OrderListItem {
   paymentMethod: string
   shippingFee: number
   totalAmount: number
+  vatRate: number
+  vatAmount: number
   finalAmount: number
   receiver: ReceiverInfo
   user?: { id: number; name: string; email: string }

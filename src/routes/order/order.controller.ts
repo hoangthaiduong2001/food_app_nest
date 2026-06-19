@@ -18,7 +18,9 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodSerializerDto } from 'nestjs-zod';
 import { OrderService } from './order.service';
@@ -94,6 +96,23 @@ export class OrderController {
       userId: user.userId,
       roleName: user.roleName,
     });
+  }
+
+  @Get(':id/invoice')
+  @AuthSwagger()
+  @ApiOperation({ summary: 'Download invoice PDF for a delivered order' })
+  async downloadInvoice(
+    @CurrentUser() user: ActiveUserData,
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    const pdf = await this.orderService.generateInvoicePdf(id, {
+      userId: user.userId,
+      roleName: user.roleName,
+    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-order-${id}.pdf"`);
+    res.end(pdf);
   }
 
   @Patch(':id/status')

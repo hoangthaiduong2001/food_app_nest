@@ -66,10 +66,34 @@
       "Bash(gh pr create --title 'fix: prisma config JS + Redis TLS for production deploy' --body ' *)",
       "Bash(curl -s -X POST -H 'Authorization: token __CMDSUB_OUTPUT__')",
       "Bash(curl -sS https://webi.sh/gh)",
-      "Bash(sh)"
+      "Bash(sh)",
+      "Bash(curl -s https://food-app-nest.onrender.com/)",
+      "Bash(curl -s https://food-app-nest.onrender.com/health/liveness)",
+      "Bash(curl -s https://food-app-nest.onrender.com/api)",
+      "Bash(curl -s -X POST https://food-app-nest.onrender.com/auth/register -H 'Content-Type: application/json' -d '{\"name\":\"Test User\",\"email\":\"test@example.com\",\"password\":\"Test@1234\",\"phone\":\"0901234567\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('name:', d.get\\('name'\\)\\); print\\('scripts:', list\\(d.get\\('scripts',{}\\).keys\\(\\)\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3003/orders/1\" -H \"Authorization: Bearer $\\(cat /tmp/token.txt || echo ''\\)\")",
+      "Bash(curl -L \"https://github.com/google/fonts/raw/main/apache/roboto/Roboto%5Bwdth%2Cwght%5D.ttf\" -o /Users/fe-duong/Project-personnal/food_app_nest/src/assets/Roboto-Regular.ttf)",
+      "Bash(curl -L \"https://github.com/google/fonts/raw/main/apache/roboto/static/Roboto-Bold.ttf\" -o /Users/fe-duong/Project-personnal/food_app_nest/src/assets/Roboto-Bold.ttf)",
+      "Bash(curl -L \"https://github.com/google/fonts/raw/main/apache/roboto/static/Roboto-Regular.ttf\" -o /Users/fe-duong/Project-personnal/food_app_nest/src/assets/Roboto-Regular.ttf)",
+      "Bash(xxd /Users/fe-duong/Project-personnal/food_app_nest/src/assets/Roboto-Regular.ttf)",
+      "Bash(curl -L \"https://raw.githubusercontent.com/google/fonts/main/apache/roboto/static/Roboto-Regular.ttf\" -o /Users/fe-duong/Project-personnal/food_app_nest/src/assets/Roboto-Regular.ttf)",
+      "Bash(pkill -f \"node.*dist/main\")",
+      "Bash(pkill -f \"ts-node.*main\")",
+      "Bash(open /tmp/test-noto-var.pdf)",
+      "Bash(# Tìm TTF có sẵn trong máy *)",
+      "Read(//Library/Fonts/**)",
+      "Bash(mkdir -p /Users/fe-duong/Project-personnal/food_app_nest/src/assets/fonts && cp \"/Library/Fonts/Arial Unicode.ttf\" /Users/fe-duong/Project-personnal/food_app_nest/src/assets/fonts/ArialUnicode.ttf && ls -lh /Users/fe-duong/Project-personnal/food_app_nest/src/assets/fonts/)",
+      "Bash(open /tmp/invoice-final.pdf)",
+      "Bash(open /tmp/invoice-v3.pdf)",
+      "Bash(curl -s \"http://localhost:3000/api/v1/products/1\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\([{'id':v['id'],'name':v['name'],'price':v['price']} for v in d['data']['variants']], indent=2\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3000/api/v1/products/1\" -o /tmp/p1.json)",
+      "Bash(gh run *)"
     ],
     "additionalDirectories": [
-      "/tmp"
+      "/tmp",
+      "/System/Library/Fonts/Supplemental"
     ]
   }
 }

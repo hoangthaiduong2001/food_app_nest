@@ -42,4 +42,9 @@ export const orderService = {
 
   pay: (id: number) =>
     api.post<{ data: Order }>(`/orders/${id}/pay`).then((r) => r.data.data),
+
+  downloadInvoice: (id: number) =>
+    api
+      .get(`/orders/${id}/invoice`, { responseType: 'blob' })
+      .then((r) => r.data as Blob),
 };
