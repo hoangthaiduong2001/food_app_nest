@@ -16,6 +16,7 @@ import { NotificationService } from '../notification/notification.service';
 import { WalletRepository } from '../wallet/wallet.repository';
 import { OrderRepository } from './order.repository';
 import { OrderService } from './order.service';
+import { InvoicePdfService } from '../email/invoice-pdf.service';
 import { DistributedLockService } from '@/shared/services/distributed-lock.service';
 import { IdempotencyService } from '@/shared/services/idempotency.service';
 import { PrismaService } from '@/shared/services/prisma.service';
@@ -24,6 +25,7 @@ const mockOrderRepo = {
   findById: jest.fn(),
   findByIdForUser: jest.fn(),
   findByIdForSeller: jest.fn(),
+  findByIdForInvoice: jest.fn(),
   list: jest.fn(),
   createOrderWithStock: jest.fn(),
   updateStatusWithStock: jest.fn(),
@@ -48,6 +50,7 @@ const mockPrisma = {
   user: { findUnique: jest.fn() },
   seller: { findUnique: jest.fn() },
 };
+const mockInvoicePdf = { generate: jest.fn().mockResolvedValue(Buffer.from('mock-pdf')) };
 
 describe('OrderService', () => {
   let service: OrderService;
@@ -63,6 +66,7 @@ describe('OrderService', () => {
         { provide: DistributedLockService, useValue: mockLockService },
         { provide: WalletRepository, useValue: mockWalletRepo },
         { provide: EmailService, useValue: mockEmailService },
+        { provide: InvoicePdfService, useValue: mockInvoicePdf },
         { provide: NotificationService, useValue: mockNotification },
         { provide: ActivityLogService, useValue: mockActivityLog },
         { provide: PUB_SUB, useValue: mockPubSub },
